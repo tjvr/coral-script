@@ -10,7 +10,7 @@ const session = require('express-session');
 let r = request.defaults({baseUrl: 'https://api.monzo.com/', json: true});
 
 passport.use(new OAuth2Strategy({
-  authorizationURL: 'https://auth.getmondo.co.uk',
+  authorizationURL: 'https://auth.monzo.com',
   tokenURL: 'https://api.monzo.com/oauth2/token',
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -35,6 +35,7 @@ app.get('/logout', (req, res) => {
   req.logout();
   res.redirect('/');
 });
+
 
 app.get('/', (req, res) => {
   if (!req.isAuthenticated()) {
