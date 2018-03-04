@@ -7,6 +7,8 @@ const request = require('request');
 const OAuth2Strategy = require('passport-oauth2');
 const session = require('express-session');
 
+const coral = require('./interpreter')
+
 let r = request.defaults({baseUrl: 'https://api.monzo.com/', json: true});
 
 passport.use(new OAuth2Strategy({
@@ -27,6 +29,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+app.use(express.bodyParser());
+app.use(express.bodyParser());
 app.use(passport.initialize());
 app.use(passport.session());
 app.get('/login', passport.authenticate('oauth2'));
@@ -36,12 +40,15 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
+var bodyParser = require('body-parser')
+
+
 
 app.get('/', (req, res) => {
   if (!req.isAuthenticated()) {
     return res.render('index');
   }
-  r = r.defaults({auth: {bearer: req.user.accessToken}});
+  const r = r.defaults({auth: {bearer: req.user.accessToken}});
   
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
@@ -62,7 +69,8 @@ app.get('/config', (req, res) => {
     res.status(401);
     return res.send("not authed");
   }
-  
+  const r = r.defaults({auth: {bearer: req.user.accessToken}});
+
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
       req.logout();
@@ -74,7 +82,7 @@ app.get('/config', (req, res) => {
       if (error) return res.status(500);
       
       const account = body.accounts.find(acc => acc.type == 'uk_retail')
-      if (!acc) {
+      if (!account) {
         res.status(412);
         return res.send('no current account')
       }
@@ -87,7 +95,7 @@ app.get('/config', (req, res) => {
         finish();
       })
       
-      r('/transactions', {qs: {account_id: account.id}}, (error, response, body) => {
+      r('/transactions', {qs: {account_id: account.id}, 'expand[]': 'merchant'}, (error, response, body) => {
         transactions = body.transactions;
         finish();
       });
@@ -97,11 +105,44 @@ app.get('/config', (req, res) => {
         res.send({
           pots: pots.filter(pot => !pot.deleted).map(({id, name}) => ({id, name})),
           transaction: transactions.pop(),
+          account: {id: account.id, description: account.description},
         });
       }
     });
   });
 
+})
+
+app.post('/execute', (req, res) => {
+  console.log(req.body)
+  
+  if (!req.isAuthenticated()) {
+    res.status(401);
+    return res.send("not authed");
+  }
+  const r = r.defaults({auth: {bearer: req.user.accessToken}});
+
+  r('/ping/whoami', (error, response, body) => {
+    if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
+      req.logout();
+      return res.redirect('/');
+    }
+    
+    const {user_id} = body;
+    r('/accounts', (error, response, body) => {
+      if (error) return res.status(500);
+      
+      const account = body.accounts.find(acc => acc.type == 'uk_retail')
+      if (!account) {
+        res.status(412);
+        return res.send('no current account')
+      }
+      
+      coral({
+        account: account,
+      })
+    })
+  })
 })
 
 app.listen(process.env.PORT);
