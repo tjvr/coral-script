@@ -42,11 +42,13 @@ app.get('/', (req, res) => {
     return res.render('index');
   }
   r = r.defaults({auth: {bearer: req.user.accessToken}});
+  
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
       req.logout();
       return res.redirect('/');
     }
+    
     const {user_id} = body;
     r('/accounts', (error, response, body) => {
       const {accounts: [account]} = body;
@@ -57,5 +59,12 @@ app.get('/', (req, res) => {
     });
   });
 });
+
+app.get('/config', (req, res) => {
+  if (!req.isAuthenticated()) {
+    res.status(400);
+    return "nope";
+  }
+})
 
 app.listen(process.env.PORT);
