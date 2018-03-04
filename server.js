@@ -52,19 +52,56 @@ app.get('/', (req, res) => {
     const {user_id} = body;
     r('/accounts', (error, response, body) => {
       const {accounts: [account]} = body;
-      r('/transactions', {qs: {account_id: account.id}}, (error, response, body) => {
-        const {transactions} = body;
-        res.render('index', {user_id, account, transactions});
-      });
+      res.render('index', {user_id, account, transactions: []});
     });
   });
 });
 
 app.get('/config', (req, res) => {
   if (!req.isAuthenticated()) {
-    res.status(400);
-    return "nope";
+    res.status(401);
+    return res.send("not authed");
   }
+  
+  r('/ping/whoami', (error, response, body) => {
+    if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
+      req.logout();
+      return res.redirect('/');
+    }
+    
+    const {user_id} = body;
+    r('/accounts', (error, response, body) => {
+      if (error) return res.status(500);
+      
+      const account = body.accounts.find(acc => acc.type == 'uk_retail')
+      if (!acc) {
+        res.status(412);
+        return res.send('no current account')
+      }
+      
+      let pots, transactions
+      
+      r('/pots', (error, response, body) => {
+        if (error) return res.status(500);
+        pots = body.pots;
+        finish();
+      })
+      
+      r('/transactions', {qs: {account_id: account.id}}, (error, response, body) => {
+        transactions = body.transactions;
+        finish();
+      });
+      
+      function finish() {
+        if (pots === undefined || transactions === undefined) return
+        res.send({
+          pots: pots.filter(pot => !pot.deleted).map(({id, name}) => ({id, name})),
+          transaction: transactions.pop(),
+        });
+      }
+    });
+  });
+
 })
 
 app.listen(process.env.PORT);
