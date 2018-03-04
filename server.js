@@ -1,36 +1,43 @@
 'use strict';
 
+const path = require('path');
 const http = require('http');
+
 const express = require('express');
 const passport = require('passport');
 const request = require('request');
 const OAuth2Strategy = require('passport-oauth2');
 const session = require('express-session');
+const bodyParser = require('body-parser')
 
 const coral = require('./interpreter')
 
-let r = request.defaults({baseUrl: 'https://api.monzo.com/', json: true});
-
-passport.use(new OAuth2Strategy({
-  authorizationURL: 'https://auth.monzo.com',
-  tokenURL: 'https://api.monzo.com/oauth2/token',
-  clientID: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
-  callbackURL: `${process.env.ROOT_URL}/callback`,
-  state: true
-}, (accessToken, refreshToken, profile, done) => done(null, Object.assign({accessToken, refreshToken}, profile))));
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((user, done) => done(null, user));
+const api = request.defaults({baseUrl: 'https://api.monzo.com/', json: true});
 
 const app = express();
 app.set('view engine', 'pug');
+app.use(bodyParser.json());
+
+app.use(express.static('public'))
+
+if (!process.env.access_token) {
+  passport.use(new OAuth2Strategy({
+    authorizationURL: 'https://auth.monzo.com',
+    tokenURL: 'https://api.monzo.com/oauth2/token',
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: `${process.env.ROOT_URL}/callback`,
+    state: true
+  }, (accessToken, refreshToken, profile, done) => done(null, Object.assign({accessToken, refreshToken}, profile))));
+  passport.serializeUser((user, done) => done(null, user));
+  passport.deserializeUser((user, done) => done(null, user));
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false
 }));
-app.use(express.bodyParser());
-app.use(express.bodyParser());
 app.use(passport.initialize());
 app.use(passport.session());
 app.get('/login', passport.authenticate('oauth2'));
@@ -40,16 +47,16 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-var bodyParser = require('body-parser')
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname + '/public/index.html'));
+});
 
-
-
-app.get('/', (req, res) => {
+const authenticated = function(req, res) {
   if (!req.isAuthenticated()) {
     return res.render('index');
   }
-  const r = r.defaults({auth: {bearer: req.user.accessToken}});
-  
+  const r = api.defaults({auth: {bearer: req.user.accessToken}});
+
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
       req.logout();
@@ -62,6 +69,10 @@ app.get('/', (req, res) => {
       res.render('index', {user_id, account, transactions: []});
     });
   });
+}
+
+
+app.get('/', (req, res) => {
 });
 
 app.get('/config', (req, res) => {
@@ -69,7 +80,7 @@ app.get('/config', (req, res) => {
     res.status(401);
     return res.send("not authed");
   }
-  const r = r.defaults({auth: {bearer: req.user.accessToken}});
+  const r = api.defaults({auth: {bearer: req.user.accessToken}});
 
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
@@ -114,18 +125,21 @@ app.get('/config', (req, res) => {
 })
 
 app.post('/execute', (req, res) => {
-  console.log(req.body)
+  const {script} = req.body
+  if (!script) {
+    res.status(400);
+    return res.send({error: "missing param: script"})
+  }
   
   if (!req.isAuthenticated()) {
     res.status(401);
-    return res.send("not authed");
+    return res.send({error: "not authed"});
   }
-  const r = r.defaults({auth: {bearer: req.user.accessToken}});
+  const r = api.defaults({auth: {bearer: req.user.accessToken}});
 
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
-      req.logout();
-      return res.redirect('/');
+      return res.send({error: "auth expired"})
     }
     
     const {user_id} = body;
@@ -135,12 +149,14 @@ app.post('/execute', (req, res) => {
       const account = body.accounts.find(acc => acc.type == 'uk_retail')
       if (!account) {
         res.status(412);
-        return res.send('no current account')
+        return res.send({error: "no current account"})
       }
       
-      coral({
+      res.send(coral({
+        request: r,
         account: account,
-      })
+        script: script,
+      }))
     })
   })
 })
