@@ -122,7 +122,10 @@
         return new Menu('abs', 'floor', 'ceiling', 'sqrt', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', 'e ^', '10 ^').translate();
       },
       pot: function(arg) {
-        return new Menu(exec.pots.map(p => p.name))
+        var m = new Menu
+        const exec = arg.app.editor.exec;
+        m.addAll(exec.pots.map(p => p.name))
+        return m
       },
     }
   });
@@ -684,6 +687,7 @@
     constructor(editor) {
       this.editor = editor;
 
+      this.pots = []
       this.init()
     }
 
@@ -695,6 +699,7 @@
       this.user_id = data.user_id
       this.account_id = data.account_id
       this.pots = data.pots
+      console.log('init')
     }
 
     async runScript(script) {
