@@ -51,37 +51,21 @@ app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname + '/public/index.html'));
 });
 
-const authenticated = function(req, res) {
-  if (!req.isAuthenticated()) {
-    return res.render('index');
+const authenticated = func => (req, res) => {
+  if (process.env.access_token) {
+    const r = api.defaults({auth: {bearer: process.env.access_token}});
+    return func(req, res, r)
   }
-  const r = api.defaults({auth: {bearer: req.user.accessToken}});
 
-  r('/ping/whoami', (error, response, body) => {
-    if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
-      req.logout();
-      return res.redirect('/');
-    }
-    
-    const {user_id} = body;
-    r('/accounts', (error, response, body) => {
-      const {accounts: [account]} = body;
-      res.render('index', {user_id, account, transactions: []});
-    });
-  });
-}
-
-
-app.get('/', (req, res) => {
-});
-
-app.get('/config', (req, res) => {
   if (!req.isAuthenticated()) {
     res.status(401);
-    return res.send("not authed");
+    return res.send({error: "not authed"});
   }
   const r = api.defaults({auth: {bearer: req.user.accessToken}});
+  return func(req, res, r)
+}
 
+app.get('/config', authenticated((_, res, r) => {
   r('/ping/whoami', (error, response, body) => {
     if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
       req.logout();
@@ -114,51 +98,27 @@ app.get('/config', (req, res) => {
       function finish() {
         if (pots === undefined || transactions === undefined) return
         res.send({
+          user_id: user_id,
+          account_id: account.id,
           pots: pots.filter(pot => !pot.deleted).map(({id, name}) => ({id, name})),
           transaction: transactions.pop(),
-          account: {id: account.id, description: account.description},
         });
       }
     });
   });
 
-})
+}))
 
-app.post('/execute', (req, res) => {
-  const {script} = req.body
-  if (!script) {
-    res.status(400);
-    return res.send({error: "missing param: script"})
-  }
-  
-  if (!req.isAuthenticated()) {
-    res.status(401);
-    return res.send({error: "not authed"});
-  }
-  const r = api.defaults({auth: {bearer: req.user.accessToken}});
+app.post('/execute', authenticated(async (req, res, r) => {
+  const {script, account_id, user_id} = req.body
+  if (!script) { res.status(400); return res.send({error: "missing param: script"}) }
+  if (!account_id) { res.status(400); return res.send({error: "missing param: account_id"}) }
+  if (!user_id) { res.status(400); return res.send({error: "missing param: user_id"}) }
 
-  r('/ping/whoami', (error, response, body) => {
-    if (response && http.STATUS_CODES[response.statusCode] === 'Unauthorized') {
-      return res.send({error: "auth expired"})
-    }
-    
-    const {user_id} = body;
-    r('/accounts', (error, response, body) => {
-      if (error) return res.status(500);
-      
-      const account = body.accounts.find(acc => acc.type == 'uk_retail')
-      if (!account) {
-        res.status(412);
-        return res.send({error: "no current account"})
-      }
-      
-      res.send(coral({
-        request: r,
-        account: account,
-        script: script,
-      }))
-    })
+  const data = await coral(r, script, {
+    user_id, account_id,
   })
-})
+  res.send(data)
+}))
 
 app.listen(process.env.PORT);

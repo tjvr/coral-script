@@ -16,15 +16,15 @@
     // },
     categories: {
       undefined: ['Undefined', '#d42828'],
-      1: ['Motion', '#4a6cd4'],
-      2: ['Looks', '#8a55d7'],
-      3: ['Sound', '#bb42c3'],
-      4: ['Pen', '#0e9a6c'], // Scratch 1.4: #009870
+      //1: ['Motion', '#4a6cd4'],
+      2: ['Account', '#8a55d7'],
+      3: ['Pots', '#bb42c3'],
+      //4: ['Pen', '#0e9a6c'], // Scratch 1.4: #009870
       5: ['Events', '#c88330'],
       6: ['Control', '#e1a91a'],
-      7: ['Sensing', '#2ca5e2'],
+      7: ['Transactions', '#2ca5e2'],
       8: ['Operators', '#5cb712'],
-      9: ['Data', '#ee7d16'], // Scratch 1.4: #f3761d
+      9: ['Variables', '#ee7d16'], // Scratch 1.4: #f3761d
       10: ['More Blocks', '#632d99'], // #531e99
       11: ['Parameter', '#5947b1'],
       12: ['List', '#cc5b22'], // Scratch 1.4: #d94d11
@@ -37,12 +37,14 @@
       'whenTxCredit': ['h', 'when I receive ➕', 5],
       'whenTxDebit': ['h', 'when I spend ➖', 5],
 
+      // account
+      'balance': ['r', 'account balance', 2],
+      'createFeedItem': ['c', 'post title: %s body: %s to feed', 2, "Nyan", ""],
+
       // operations
-      'balance': ['r', 'account balance', 3],
       'potBalance': ['r', 'balance of 🍯 %m.pot', 3, "Giving"],
       'potDeposit': ['c', 'deposit %n into 🍯 %m.pot', 3, "£1", "Savings"],
       'potWithdraw': ['c', 'withdraw %n from 🍯 %m.pot', 3, "£1", "Holiday"],
-      'createFeedItem': ['c', 'post title: %s body: %s to feed', 3, "Nyan", ""],
 
       // sensing
       'txTimeAndDate': ['r', 'current %m.timeAndDate', 7, 'minute'],
@@ -94,7 +96,7 @@
 
       'doUntil': ['c', '@loop repeat until %b %t', 6],
 
-      'stop': ['f', 'stop', 6],
+      'stop': ['f', 'stop script', 6],
 
       // variables
       'readVariable': ['r', '%l', 9, 'variable'],
@@ -248,122 +250,46 @@
 
   
   var palettes = {
-    1: [
-      // motion
-        'forward:',
-        'turnRight:',
-        'turnLeft:',
-        '---',
-        'heading:',
-        'pointTowards:',
-        '---',
-        'gotoSpriteOrMouse:',
-        '---',
-        'changeXposBy:',
-        'xpos:',
-        'changeYposBy:',
-        'ypos:',
-        '---',
-        'bounceOffEdge',
-        '--',
-        'setRotationStyle',
-        '---',
-        {watcher: 'xpos'},
-        {watcher: 'ypos'},
-        {watcher: 'heading'}
-    ],
     2: [
-      {watcher: 'sceneName'},
+      'balance',
+      '--',
+      'createFeedItem',
     ],
     3: [
-      // sound
-      ['playSound:', {first: 'sound'}],
-      ['doPlaySoundAndWait', {first: 'sound'}],
-      'stopAllSounds',
+      // pots
+      'potDeposit',
+      'potWithdraw',
       '--',
-      'playDrum',
-      'rest:elapsed:from:',
-      '--',
-      'noteOn:duration:elapsed:from:',
-      'instrument:',
-      '--',
-      'changeVolumeBy:',
-      'setVolumeTo:',
-      {watcher: 'volume'},
-      '--',
-      'changeTempoBy:',
-      'setTempoTo:',
-      {watcher: 'tempo'}
-    ],
-    4: [
-      // pen
-      'clearPenTrails',
-        '--',
-        'stampCostume',
-        '--',
-        'putPenDown',
-        'putPenUp',
-        '--',
-        'penColor:',
-        'changePenHueBy:',
-        'setPenHueTo:',
-        '--',
-        'changePenShadeBy:',
-        'setPenShadeTo:',
-        '--',
-        'changePenSizeBy:',
-        'penSize:'
-    ],
-    5: [
-      // triggers
-      'whenTxCredit',
-      'whenTxDebit',
+      'potBalance',
     ],
     6: [
-      // control - sprite
-      'wait:elapsed:from:',
-      '--',
-      'doRepeat',
-      'doForever',
-      '--',
+      // control
+      'whenTxCredit',
+      'whenTxDebit',
+      '---',
       'doIf',
       'doIfElse',
-      'doWaitUntil',
       'doUntil',
       '--',
-      'stopScripts',
+      'doRepeat',
       '--',
-      'createCloneOf',
+      'stop',
     ],
     7: [
-      // sensing
-        'touching:',
-        'touchingColor:',
-        'color:sees:',
-        'distanceTo:',
-        '--',
-      'doAsk',
-      {watcher: 'answer'},
+      'txAmount',
+      'txDescription',
+      'txNotes',
+      'txLocalAmount',
       '--',
-      'keyPressed:',
-      'mousePressed',
-      'mouseX',
-      'mouseY',
+      'isTopup',
+      'categoryTest',
+      'schemeTest',
       '--',
-      {watcher: 'soundLevel'},
+      'txMerchantName',
+      'txMerchantEmoji',
+      'txMerchantCountry',
       '--',
-      {watcher: 'senseVideoMotion'},
-      'setVideoState',
-      'setVideoTransparency',
-      '--',
-      {watcher: 'timer'},
-      'timerReset',
-      '--',
-      ['getAttribute:of:', {first: 'attribute'}, {first: 'otherSprite'}],
-      '--',
-      {watcher: 'timeAndDate'},
-      'timestamp',
-      'getUserName'
+      'txTimeAndDate',
     ],
     8: [
       // operators
@@ -410,152 +336,6 @@
     ]
   };
 
-  var tips = {
-    'home': 'home',
-    'scratchUI': 'ui/editor-map',
-    'paint': 'ui/image-editor-map',
-    'hoc': 'howto/hoc',
-    'madewithcode-card': 'howto/cardtip1',
-    'madewithcode-name': 'howto/nametip1',
-    'getStarted': 'howto/get-started-1',
-    'changeXposBy:': 'blocks/change-x',
-    'changeYposBy:': 'blocks/change-y',
-    'heading': 'blocks/direction',
-    'glideSecs:toX:y:elapsed:from:': 'blocks/glide',
-    'gotoSpriteOrMouse:': 'blocks/go-to',
-    'gotoX:y:': 'blocks/go-to-xy',
-    'bounceOffEdge': 'blocks/if-on-edge-bounce',
-    'forward:': 'blocks/move-steps',
-    'heading:': 'blocks/point-direction',
-    'pointTowards:': 'blocks/point-towards',
-    'say:': 'blocks/say',
-    'say:duration:elapsed:from:': 'blocks/say-for-seconds',
-    'turnLeft:': 'blocks/turn-left',
-    'turnRight:': 'blocks/turn-right',
-    'xpos:': 'blocks/set-x',
-    'ypos:': 'blocks/set-y',
-    '&': 'blocks/and',
-    '|': 'blocks/or',
-    'getAttribute:of:': 'blocks/getattribute',
-    'list:contains:': 'blocks/list-contains',
-    'computeFunction:of:': 'blocks/computefunction',
-    '*': 'blocks/multiply',
-    '+': 'blocks/add',
-    '-': 'blocks/subtract',
-    '/': 'blocks/divide',
-    '%': 'blocks/mod',
-    '<': 'blocks/less-than',
-    '=': 'blocks/equal',
-    '>': 'blocks/greater-than',
-    'append:toList:': 'blocks/add-to-list',
-    'answer': 'blocks/answer',
-    'doAsk': 'blocks/ask-and-wait',
-    'backgroundIndex': 'blocks/backdrop-number',
-    'sceneName': 'blocks/backdrop-name',
-    'broadcast:': 'blocks/broadcast',
-    'doBroadcastAndWait': 'blocks/broadcast-wait',
-    'changeGraphicEffect:by:': 'blocks/change-effect',
-    'changeVar:by:': 'blocks/change-variable',
-    'changePenHueBy:': 'blocks/changecolor',
-    'changePenShadeBy:': 'blocks/changeshadeby',
-    'changePenSizeBy:': 'blocks/changepensize',
-    'changeSizeBy:': 'blocks/change-size',
-    'changeTempoBy:': 'blocks/change-tempo',
-    'changeVolumeBy:': 'blocks/change-volume',
-    'clearPenTrails': 'blocks/clear',
-    'filterReset': 'blocks/clear-graphic-effects',
-    'color:sees:': 'blocks/color-is-touching',
-    'costumeIndex': 'blocks/costume-number',
-    'createCloneOf': 'blocks/create-clone',
-    'timeAndDate': 'blocks/current-time',
-    'timestamp': 'blocks/timestamp',
-    'deleteLine:ofList:': 'blocks/delete-from-list',
-    'deleteClone': 'blocks/delete-this-clone',
-    'distanceTo:': 'blocks/distance-to',
-    'doForever': 'blocks/forever',
-    'goBackByLayers:': 'blocks/go-back-layer',
-    'comeToFront': 'blocks/go-to-front',
-    'hide': 'blocks/hide',
-    'hideList:': 'blocks/hide-list',
-    'hideVariable:': 'blocks/hide-variable',
-    'doIf': 'blocks/if',
-    'doIfElse': 'blocks/if-else',
-    'insert:at:ofList:': 'blocks/inside-list',
-    'getLine:ofList:': 'blocks/item-of-list',
-    'concatenate:with:': 'blocks/join',
-    'keyPressed:': 'blocks/key-pressed',
-    'lineCountOfList:': 'blocks/length-of-list',
-    'stringLength:': 'blocks/length-of',
-    'letter:of:': 'blocks/letter-of',
-    'soundLevel': 'blocks/loudness',
-    'mousePressed': 'blocks/mouse-down',
-    'mouseX': 'blocks/mouse-x',
-    'mouseY': 'blocks/mouse-y',
-    'nextScene': 'blocks/nextbackdrop',
-    'nextCostume': 'blocks/next-costume',
-    'not': 'blocks/not',
-    'putPenDown': 'blocks/pendown',
-    'putPenUp': 'blocks/penup',
-    'randomFrom:to:': 'blocks/pick-random',
-    'playDrum': 'blocks/play_drum',
-    'noteOn:duration:elapsed:from:': 'blocks/playnote',
-    'playSound:': 'blocks/playsound',
-    'doPlaySoundAndWait': 'blocks/playsound_untildone',
-    'doRepeat': 'blocks/repeat',
-    'doUntil': 'blocks/repeat-until',
-    'setLine:ofList:to:': 'blocks/replace-list',
-    'timerReset': 'blocks/reset-timer',
-    'rest:elapsed:from:': 'blocks/rest',
-    'rounded': 'blocks/round',
-    'setGraphicEffect:to:': 'blocks/set-effect',
-    'setVar:to:': 'blocks/set-variable',
-    'instrument:': 'blocks/setinstrument',
-    'penColor:': 'blocks/setpencolor',
-    'setPenHueTo:': 'blocks/setpencolorto',
-    'setPenShadeTo:': 'blocks/setshade',
-    'penSize:': 'blocks/setpensize',
-    'setRotationStyle': 'blocks/setrotation',
-    'setSizeTo:': 'blocks/set-size',
-    'setTempoTo:': 'blocks/set-tempo',
-    'setVideoTransparency': 'blocks/set-video-transparency',
-    'setVolumeTo:': 'blocks/set-volume',
-    'show': 'blocks/show',
-    'showList:': 'blocks/show-list',
-    'showVariable:': 'blocks/show-variable',
-    'scale': 'blocks/size',
-    'stampCostume': 'blocks/stamp',
-    'stopScripts': 'blocks/stop',
-    'stopAllSounds': 'blocks/stopsound',
-    'startScene': 'blocks/switch-backdrop',
-    'startSceneAndWait': 'blocks/switch-backdrop-and-wait',
-    'lookLike:': 'blocks/switch-costume',
-    'tempo': 'blocks/tempo',
-    'think:': 'blocks/think',
-    'think:duration:elapsed:from:': 'blocks/think-for-seconds',
-    'timer': 'blocks/timer',
-    'touching:': 'blocks/touching',
-    'touchingColor:': 'blocks/touching-color',
-    'setVideoState': 'blocks/turn-video',
-    'getUserName': 'blocks/username',
-    'senseVideoMotion': 'blocks/video-motion',
-    'volume': 'blocks/volume',
-    'wait:elapsed:from:': 'blocks/wait-secs',
-    'doWaitUntil': 'blocks/wait-until',
-    'whenKeyPressed': 'blocks/when-key-pressed',
-    'whenSensorGreaterThan': 'blocks/when-loudness',
-    'whenGreenFlag': 'blocks/when-flag-clicked',
-    'whenSceneStarts': 'blocks/when-backdrop-switches',
-    'whenIReceive': 'blocks/when-i-receive',
-    'whenCloned': 'blocks/clone-startup',
-    'whenClicked': 'blocks/when-this-sprite-clicked',
-    'xpos': 'blocks/x-position',
-    'ypos': 'blocks/y-position',
-    'procDef': 'blocks/define',
-    'proc_declaration': 'blocks/define',
-    'call': 'blocks/usedefine',
-    'extensions': 'ui/extensions'
-  };
-
   var Workspace = vis.Workspace;
   var Palette = vis.Palette;
   var Script = vis.Script;
@@ -589,7 +369,7 @@
   Block.prototype.click = function() {
     var app = this.app;
     if (app && app.exec) {
-      app.exec.toggleThread(this.topScript, app.editor.selectedSprite);
+      app.exec.runScript(this.topScript);
     }
   };
 
@@ -875,7 +655,8 @@
     }
 
     this.buttons = {};
-    [1, 5, 2, 6, 3, 7, 4, 8, 9, 10].forEach(function(id) {
+    // TODO variables
+    [2, 6, 3, 8, 7].forEach(function(id) {
       var cat = vis.getCategory(id);
 
       var b = cl('button', 'palette-button', {value: id}, [
@@ -1021,13 +802,55 @@
   /***************************************************************************/
 
   class Interpreter {
-    constructor() {
+    constructor(editor) {
+      this.editor = editor;
+
+      this.init()
+    }
+
+    async init() {
+      const data = await fetch("/config", {
+        credentials: "include",
+      }).then(rsp => rsp.json())
+
+      this.user_id = data.user_id
+      this.account_id = data.account_id
+      this.pots = data.pots
+    }
+
+    async runScript(script) {
+      if (!this.user_id || !this.account_id) return
+      console.log(JSON.stringify(script.blocks))
+
+      const data = await fetch("/execute", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({
+          user_id: this.user_id,
+          account_id: this.account_id,
+          script: script.blocks,
+        }),
+        headers: new Headers({
+          "Content-Type": "application/json"
+        })
+      }).then(rsp => rsp.json())
+
+      if (data.error) {
+        const redOutline = script.outline.bind(script, 2, '#faa')
+        script.addEffect(redOutline);
+        setTimeout(() => {
+          script.removeEffect(redOutline)
+        }, 1000)
+      }
+
+      var pos = script.blocks[0].worldPosition;
+      this.editor.showBubble(data.result || data.error, pos.x + script.width, pos.y);
     }
   }
 
   class Editor {
     constructor() {
-      this.exec = new Interpreter;
+      this.exec = new Interpreter(this);
 
       this.app = new vis.App();
       this.app.editor = this;
@@ -1037,15 +860,114 @@
       this.el = cl('editor Visual-no-select', [
         cl('tab-panel-content', [this.scriptsPanel.el]),
       ])
-      this.scriptsPanel.category = 1
+      this.scriptsPanel.category = 6
 
       this.variables = [];
 
       window.addEventListener('resize', () => this.app.resize());
+
+      document.addEventListener('mousedown', this.hideBubble.bind(this));
+      document.addEventListener('wheel', this.hideBubble.bind(this));
     }
 
     hasWatcher(n) { return false; }
   }
+
+  Editor.prototype.bubbleRange = 25;
+  Editor.prototype.bubbleMinWidth = 12;
+  Editor.prototype.bubbleFont = '12px Arial, Verdana, DejaVu Sans, sans-serif';
+  Editor.prototype.bubbleHeight = 18;
+  Editor.prototype.bubbleColor = '#fff';
+  Editor.prototype.bubbleBorderColor = 'rgba(0, 0, 0, .3)';
+  Editor.prototype.bubbleTextColor = '#5c5d5f';
+  Editor.prototype.bubblePadding = 4;
+  Editor.prototype.bubbleRadius = 5;
+  Editor.prototype.bubblePaddingX = 8;
+  Editor.prototype.bubblePaddingY = 2;
+  Editor.prototype.bubblePointerX = 2;
+  Editor.prototype.bubblePointerY = 5;
+  Editor.prototype.bubblePointerWidth = 10;
+  Editor.prototype.bubbleShadowColor = 'rgba(0, 0, 0, .2)';
+  Editor.prototype.bubbleShadowBlur = 8;
+  Editor.prototype.bubbleShadowX = 3;
+  Editor.prototype.bubbleShadowY = 3;
+
+  Editor.prototype.mouseMove = function(e) {
+    if (this.bubble) {
+      var dx = e.clientX - this.bubbleX;
+      var dy = e.clientY - this.bubbleY;
+      if (dx * dx + dy * dy >= this.bubbleRange * this.bubbleRange) {
+        this.hideBubble();
+      }
+    }
+  };
+
+  Editor.prototype.showBubble = function(text, x, y) {
+    this.hideBubble();
+
+    var p = this.bubblePadding;
+    var px = this.bubblePaddingX;
+    var py = this.bubblePaddingY;
+    var ix = this.bubblePointerX;
+    var iy = this.bubblePointerY;
+    var iw = this.bubblePointerWidth;
+    var sx = this.bubbleShadowX;
+    var sy = this.bubbleShadowY;
+    var sc = this.bubbleShadowColor;
+    var sb = this.bubbleShadowBlur;
+    var r = this.bubbleRadius;
+    var canvas = cl('canvas', 'Visual-absolute bubble');
+    var ct = canvas.getContext('2d');
+    ct.font = this.bubbleFont;
+    var w = Math.max(ct.measureText(text).width, this.bubbleMinWidth) + px + Math.max(px, ix);
+    var i = Math.max(0, ix - px);
+    var h = this.bubbleHeight + py * 2 + iy;
+    canvas.width = w + sx + sb * 2;
+    canvas.height = h + sy + sb * 2;
+    ct.translate(sb, sb);
+    ct.moveTo(i + px - ix, h);
+    ct.lineTo(i + px, h - iy);
+    ct.arc(i + r, h - iy - r, r, Math.PI/2, Math.PI, false);
+    ct.arc(i + r, r, r, Math.PI, Math.PI*3/2, false);
+    ct.arc(w - r, r, r, Math.PI*3/2, 0, false);
+    ct.arc(w - r, h - iy - r, r, 0, Math.PI/2, false);
+    ct.lineTo(i + px - ix + iw, h - iy);
+    ct.closePath();
+    ct.strokeStyle = this.bubbleBorderColor;
+    ct.lineWidth = 2;
+    ct.stroke();
+    ct.fillStyle = this.bubbleColor;
+    ct.shadowColor = sc;
+    ct.shadowOffsetX = sx;
+    ct.shadowOffsetY = sy;
+    ct.shadowBlur = sb;
+    ct.fill();
+    ct.shadowColor = 'transparent';
+    ct.shadowBlur = 0;
+    ct.shadowOffsetX = 0;
+    ct.shadowOffsetY = 0;
+    ct.fillStyle = this.bubbleTextColor;
+    ct.textBaseline = 'middle';
+    ct.textAlign = 'center';
+    ct.font = this.bubbleFont;
+    ct.fillText(text, i + w/2, (h - iy)/2);
+
+    this.bubble = canvas;
+    this.bubbleX = this.app.mouseX;
+    this.bubbleY = this.app.mouseY;
+    x = Math.max(p, Math.min(window.innerWidth - w - p, x));
+    y = Math.max(p, Math.min(window.innerHeight - h - p, y));
+    vis.util.setTransform(this.bubble, 'translate('+(x + i - sb)+'px,'+(y - sb - h)+'px)');
+    document.body.appendChild(this.bubble);
+  };
+
+  Editor.prototype.hideBubble = function() {
+    if (this.bubble) {
+      document.body.removeChild(this.bubble);
+      this.bubble = null;
+    }
+  };
+
 
   const editor = window.editor = new Editor()
   document.body.appendChild(editor.el)

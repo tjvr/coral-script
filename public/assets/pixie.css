@@ -703,7 +703,7 @@ button::-moz-focus-inner {
   width: 202px;
   padding: 8px 7px 8px 0;
   top: 0;
-  height: 88px;
+  height: 66px;
 }
 .palette-buttons::before {
   content: '';
@@ -752,7 +752,7 @@ button::-moz-focus-inner {
 }
 .palette-contents {
   width: 209px;
-  top: 104px;
+  top: 82px;
   bottom: 0;
 }
 .palette-label {
