@@ -706,6 +706,8 @@
       if (!this.user_id || !this.account_id) return
       console.log(JSON.stringify(script.blocks))
 
+      script.addRunningEffect();
+
       const data = await fetch("/execute", {
         method: "POST",
         credentials: "include",
@@ -718,6 +720,8 @@
           "Content-Type": "application/json"
         })
       }).then(rsp => rsp.json())
+
+      script.removeRunningEffect();
 
       if (data.error) {
         const redOutline = script.outline.bind(script, 2, '#faa')

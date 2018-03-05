@@ -77,6 +77,23 @@ Interpreter.prototype.table = {
       },
     })
   },
+  potWithdraw: async function(amount, which) {
+    amount = await this.narg(amount)
+    const {pots} = await this.api('/pots')
+    const pot = pots.find(p => p.id === which || p.name === which)
+    if (!pot) {
+      throw new Error('pot not found')
+    }
+    await this.api(`/pots/${pot.id}/withdraw`, {
+      method: 'PUT',
+      json: false,
+      form: {
+        amount: amount,
+        destination_account_id: this.account_id,
+        dedupe_id: ''+Math.random(),
+      },
+    })
+  },
 
   '>': infixN((a, b) => a > b),
   '<': infixN((a, b) => a < b),
