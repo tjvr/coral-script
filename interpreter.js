@@ -8,7 +8,9 @@ class Interpreter {
     return new Promise((resolve, reject) => {
       this._api(...args, (error, response, body) => {
         if (error) return reject(error)
-        // TODO check response status
+        if (response.statusCode !== 200) {
+          reject(new Error(`${body.code}: ${body.message}`))
+        }
         resolve(body)
       })
     })
@@ -57,6 +59,23 @@ Interpreter.prototype.table = {
     const {pots} = await this.api('/pots')
     const pot = pots.find(p => p.id === which || p.name === which)
     return pot.balance
+  },
+  potDeposit: async function(amount, which) {
+    amount = await this.narg(amount)
+    const {pots} = await this.api('/pots')
+    const pot = pots.find(p => p.id === which || p.name === which)
+    if (!pot) {
+      throw new Error('pot not found')
+    }
+    await this.api(`/pots/${pot.id}/deposit`, {
+      method: 'PUT',
+      json: false,
+      form: {
+        amount: amount,
+        source_account_id: this.account_id,
+        dedupe_id: ''+Math.random(),
+      },
+    })
   },
 
   '>': infixN((a, b) => a > b),
