@@ -47,6 +47,14 @@ func (cl *Client) Put(path string, args map[string]string, response interface{})
 	return cl.doHTTP(req, response)
 }
 
+func (cl *Client) Delete(path string, args map[string]string, response interface{}) error {
+	req, err := requestFormBody("DELETE", cl.BaseURL+path, args)
+	if err != nil {
+		return err
+	}
+	return cl.doHTTP(req, response)
+}
+
 func (cl *Client) doHTTP(req *http.Request, response interface{}) error {
 	if cl.AuthToken != "" {
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", cl.AuthToken))
@@ -98,7 +106,6 @@ func requestFormBody(method, uri string, args map[string]string) (*http.Request,
 		form.Set(k, v)
 	}
 
-	fmt.Printf("%#v\n", form.Encode())
 	req, err := http.NewRequest(method, uri, strings.NewReader(form.Encode()))
 	if err != nil {
 		return nil, err
