@@ -103,16 +103,6 @@
 
     },
     menus: {
-      direction: function() {
-        var m = new Menu;
-        [[90, 'right'],
-         [-90, 'left'],
-         [0, 'up'],
-         [180, 'down']].forEach(function(item) {
-          m.add(['('+item[0]+') '+_(item[1]), item[0]]);
-        });
-        return m;
-      },
       var: function(arg) {
         var m = new Menu;
         var editor = arg.app.editor;
@@ -125,126 +115,15 @@
         }
         return m;
       },
-      list: function(arg) {
-        var m = new Menu;
-        var editor = arg.app.editor;
-        m.addAll(editor.stage.lists.map(getName));
-        if (editor.selectedSprite.isSprite && editor.selectedSprite.lists.length) {
-          if (editor.stage.lists.length) {
-            m.add(Menu.line);
-          }
-          m.addAll(editor.selectedSprite.lists.map(getName));
-        }
-        return m;
-      },
-      key: function() {
-        var m = new Menu('up arrow', 'down arrow', 'left arrow', 'right arrow', 'space').translate().addAll('abcdefghijklmnopqrstuvwxyz0123456789'.split(''));
-        return m;
-      },
-      spriteOrMouse: function(arg) {
-        return spriteMenu(arg, false, '_mouse_');
-      },
-      touching: function(arg) {
-        return spriteMenu(arg, false, '_mouse_', '_edge_');
-      },
-      rotationStyle: function() {
-        return new Menu('left-right', 'all around', "don't rotate").translate();
-      },
-      effect: function() {
-        return new Menu('color', 'fisheye', 'whirl', 'pixelate', 'mosaic', 'brightness', 'ghost').translate();
-      },
-      costume: function(arg) {
-        return new Menu().addAll(arg.app.editor.selectedSprite.costumes.map(getName));
-      },
-      backdrop: function(arg) {
-        return new Menu().addAll(arg.app.editor.stage.costumes.map(getName)).addLine().addTranslated('next backdrop').addTranslated('previous backdrop');
-      },
-      sound: function(arg) {
-        return new Menu().addAll(arg.app.editor.selectedSprite.sounds.map(getName)).add(Menu.line).add([_('record...'), function() {
-          // TODO record a sound
-        }]);
-      },
-      broadcast: function(arg) {
-        return new Menu().addAll(arg.app.editor.broadcastNames).add(Menu.line).add([_('new message...'), function() {
-            var arg = this;
-            Dialog.prompt(_('New Message'), _('Message name:'), function(value) { // NS
-              if (value) arg.value = value;
-            }).show(arg.app.editor);
-          }]);
-      },
-      triggerSensor: function() {
-        return new Menu('loudness', 'timer', 'video motion').translate();
-      },
-      stop: function(arg) {
-        function item(value, type) {
-          return [_(value), function() {
-            arg.value = value;
-            if (arg.parent) arg.parent.type = type;
-          }];
-        }
-        return new Menu(
-          item('all', 'f'),
-          item('this script', 'f'),
-          item('other scripts in sprite', 'c'));
-      },
-      spriteOnly: function(arg) {
-        return spriteMenu(arg, true, '_myself_');
-      },
-      videoMotionType: function() {
-        return new Menu('motion', 'direction').translate();
-      },
-      stageOrThis: function() {
-        return new Menu('Stage', 'this sprite').translate();
-      },
-      videoState: function() {
-        return new Menu('off', 'on', 'on-flipped').translate();
-      },
-      spriteOrStage: function(arg) {
-        return spriteMenu(arg, false, '_stage_');
-      },
-      attribute: function(arg) {
-        var stage = arg.app.editor.stage;
-        var name = arg.parent.args[1].value;
-        if (name === '_stage_') return new Menu('backdrop #', 'backdrop name', 'volume').translate().addLine().addAll(stage.variables.map(getName));
-        var sprite = stage.findObject(name);
-        return sprite && new Menu('x position', 'y position', 'direction', 'costume #', 'costume name', 'size', 'volume').translate().addLine().addAll(sprite.variables.map(getName));
-      },
       timeAndDate: function() {
         return new Menu('year', 'month', 'date', 'day of week', 'hour', 'minute', 'second').translate();
       },
       mathOp: function() {
         return new Menu('abs', 'floor', 'ceiling', 'sqrt', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', 'e ^', '10 ^').translate();
       },
-      drum: function() {
-        return new Menu().addAll(['Snare Drum', 'Bass Drum', 'Side Stick', 'Crash Cymbal', 'Open Hi-Hat', 'Closed Hi-Hat', 'Tambourine', 'Hand Clap', 'Claves', 'Wood Block', 'Cowbell', 'Triangle', 'Bongo', 'Conga', 'Cabassa', 'Guiro', 'Vibraslap', 'Open Culca'].map(function(x, i) {return ['('+(i + 1)+') ' + _(x), i + 1]}));
+      pot: function(arg) {
+        return new Menu(exec.pots.map(p => p.name))
       },
-      instrument: function() {
-        return new Menu().addAll(['Piano', 'Electric Piano', 'Organ', 'Guitar', 'Electric Guitar', 'Bass', 'Pizzicato', 'Cello', 'Trombone', 'Clarinet', 'Saxophone', 'Flute', 'Wooden Flute', 'Bassoon', 'Choir', 'Vibraphone', 'Music Box', 'Steel Drum', 'Marimba', 'Synth Lead', 'Synth Pad'].map(function(x, i) {return ['('+(i + 1)+') ' + _(x), i + 1]}));
-      },
-      note: function() {
-        return new Menu().addAll([
-          [48, 'Low C'],
-          [50, 'D'],
-          [52, 'E'],
-          [53, 'F'],
-          [55, 'G'],
-          [57, 'A'],
-          [59, 'B'],
-          [60, 'Middle C'],
-          [62, 'D'],
-          [64, 'E'],
-          [65, 'F'],
-          [67, 'G'],
-          [69, 'A'],
-          [71, 'B'],
-          [72, 'High C']].map(function(i) {return ['('+i[0]+') '+_(i[1]), i[0]]}));
-      },
-      listItem: function() {
-        return new Menu(1).addTranslated('last').addTranslated('random');
-      },
-      listDeleteItem: function() {
-        return new Menu(1).addTranslated('last').add(Menu.line).addTranslated('all');
-      }
     }
   });
 
