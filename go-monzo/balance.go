@@ -8,7 +8,7 @@ type Balance struct {
 
 func (cl *Client) Balance(accountID string) (*Balance, error) {
 	rsp := &Balance{}
-	if err := cl.Get("/balance", map[string]string{
+	if err := cl.request("GET", "/balance", map[string]string{
 		"account_id": accountID,
 	}, rsp); err != nil {
 		return nil, err

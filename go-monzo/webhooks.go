@@ -12,7 +12,7 @@ func (cl *Client) RegisterWebhook(hook *Webhook) (*Webhook, error) {
 		"url":        hook.URL,
 	}
 	body := &Webhook{}
-	if err := cl.Post("/webhooks", args, body); err != nil {
+	if err := cl.request("POST", "/webhooks", args, body); err != nil {
 		return nil, err
 	}
 	return body, nil
@@ -25,12 +25,16 @@ func (cl *Client) Webhooks(accountID string) ([]*Webhook, error) {
 	rsp := &struct {
 		Webhooks []*Webhook `json:"webhooks"`
 	}{}
-	if err := cl.Get("/webhooks", args, rsp); err != nil {
+	if err := cl.request("GET", "/webhooks", args, rsp); err != nil {
 		return nil, err
 	}
 	return rsp.Webhooks, nil
 }
 
 func (cl *Client) DeleteWebhook(webhookID string) error {
-	return cl.Delete("/webhooks/"+webhookID, nil, nil)
+	return cl.request("DELETE", "/webhooks/"+webhookID, nil, nil)
+}
+
+type Event struct {
+	Type string `json:"type"`
 }

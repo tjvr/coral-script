@@ -15,40 +15,23 @@ type Client struct {
 }
 
 type APIError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	StatusCode int
+	Code       string `json:"code"`
+	Message    string `json:"message"`
 }
 
 func (err *APIError) Error() string {
 	return fmt.Sprintf("%s: %s", err.Code, err.Message)
 }
 
-func (cl *Client) Get(path string, args map[string]string, response interface{}) error {
-	req, err := requestQueryString(cl.BaseURL+path, args)
-	if err != nil {
-		return err
+func (cl *Client) request(method, path string, args map[string]string, response interface{}) error {
+	var req *http.Request
+	var err error
+	if method == "GET" {
+		req, err = requestQueryString(cl.BaseURL+path, args)
+	} else {
+		req, err = requestFormBody(method, cl.BaseURL+path, args)
 	}
-	return cl.doHTTP(req, response)
-}
-
-func (cl *Client) Post(path string, args map[string]string, response interface{}) error {
-	req, err := requestFormBody("POST", cl.BaseURL+path, args)
-	if err != nil {
-		return err
-	}
-	return cl.doHTTP(req, response)
-}
-
-func (cl *Client) Put(path string, args map[string]string, response interface{}) error {
-	req, err := requestFormBody("PUT", cl.BaseURL+path, args)
-	if err != nil {
-		return err
-	}
-	return cl.doHTTP(req, response)
-}
-
-func (cl *Client) Delete(path string, args map[string]string, response interface{}) error {
-	req, err := requestFormBody("DELETE", cl.BaseURL+path, args)
 	if err != nil {
 		return err
 	}
@@ -72,9 +55,11 @@ func (cl *Client) doHTTP(req *http.Request, response interface{}) error {
 	}
 
 	if rsp.StatusCode != 200 {
-		apiErr := &APIError{}
+		apiErr := &APIError{
+			StatusCode: rsp.StatusCode,
+		}
 		if err := json.Unmarshal(bytes, apiErr); err != nil {
-			return err
+			return fmt.Errorf("Error unmarshaling %d error: %v", rsp.StatusCode, err)
 		}
 		return apiErr
 	}
