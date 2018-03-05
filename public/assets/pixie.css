@@ -75,6 +75,19 @@ button::-moz-focus-inner {
   border-radius: 4px;
   background: #9c9ea2;
   margin-left: 5px;
+  display: inline-block;
+  text-decoration: none;
+  float: right;
+}
+.bs-primary {
+  background: #179fd7;
+}
+
+.status {
+  display: inline-block;
+  font-size: 1.25em;
+  margin: 2px 4px;
+  color: #555;
 }
 
 .flip,
@@ -109,9 +122,10 @@ button::-moz-focus-inner {
   left: 0;
   right: 0;
   height: 28px;
-  background: #9c9ea2;
-  padding: 0 0 0 82px;
+  /*background: #9c9ea2;*/
+  /* padding: 0 0 0 82px; */
   transition: opacity 1.2s;
+  margin: 3px 6px;
 }
 
 .top-button {

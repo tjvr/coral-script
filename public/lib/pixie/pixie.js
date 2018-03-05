@@ -89,7 +89,7 @@
       'computeFunction:of:': ['r', '%m.mathOp of %n', 8, 'abs', 9],
 
       // control - sprite
-      'doRepeat': ['c', '@loop repeat %n %t', 6, 10],
+      //'doRepeat': ['c', '@loop repeat %n %t', 6, 10],
 
       'doIf': ['c', 'if %b then %t', 6],
       'doIfElse': ['c', 'if %b then %t else %t', 6],
@@ -152,8 +152,6 @@
       'doIf',
       'doIfElse',
       'doUntil',
-      '--',
-      'doRepeat',
       '--',
       'stop',
     ],
@@ -688,7 +686,6 @@
       this.editor = editor;
 
       this.pots = []
-      this.init()
     }
 
     async init() {
@@ -699,7 +696,7 @@
       this.user_id = data.user_id
       this.account_id = data.account_id
       this.pots = data.pots
-      console.log('init')
+      return data
     }
 
     async runScript(script) {
@@ -747,7 +744,14 @@
       this.app.exec = this.exec;
       this.app.add(this.scriptsPanel = new ScriptsPanel(this))
 
+      this.save = this.save.bind(this)
+
       this.el = cl('editor Visual-no-select', [
+        cl('top-bar', [
+          this.statusEl = cl('status', ["Loading..."]),
+          el('a', {className: 'project-button', 'href': '/logout'}, ['Log Out']),
+          el('button', {className: 'project-button bs-primary', 'onclick': this.save}, ['Save']),
+        ]),
         cl('tab-panel-content', [this.scriptsPanel.el]),
       ])
       this.scriptsPanel.category = 6
@@ -758,6 +762,44 @@
 
       document.addEventListener('mousedown', this.hideBubble.bind(this));
       document.addEventListener('wheel', this.hideBubble.bind(this));
+
+      this.init()
+      //setInterval(this.save, 5000)
+    }
+
+    async init() {
+      const config = await this.exec.init()
+
+      this.app.resize();
+      this.statusEl.textContent = "Account: " + config.account_description
+    }
+
+    load() {
+      if (!localStorage.coralScript) return
+      let json
+      try {
+        json = JSON.parse(localStorage.coralScript)
+      } catch (err) {
+        console.error(err)
+        return
+      }
+      this.import(json)
+    }
+
+    import(json) {
+      for (let script of json.scripts) {
+        this.scriptsPanel.workspace.add(deserializeScript(script))
+      }
+    }
+
+    toJSON() {
+      return {
+        scripts: editor.scriptsPanel.workspace.scripts,
+      }
+    }
+
+    save() {
+      localStorage.coralScript = JSON.stringify(this)
     }
 
     hasWatcher(n) { return false; }
@@ -862,5 +904,6 @@
   const editor = window.editor = new Editor()
   document.body.appendChild(editor.el)
   editor.app.resize();
+  editor.load();
 
 }());

@@ -90,18 +90,20 @@ app.get('/config', authenticated((_, res, r) => {
         finish();
       })
       
+      /*
       r('/transactions', {qs: {account_id: account.id}, 'expand[]': 'merchant'}, (error, response, body) => {
         transactions = body.transactions;
         finish();
       });
+      */
       
       function finish() {
-        if (pots === undefined || transactions === undefined) return
+        //if (pots === undefined || transactions === undefined) return
         res.send({
           user_id: user_id,
           account_id: account.id,
+          account_description: account.description,
           pots: pots.filter(pot => !pot.deleted).map(({id, name}) => ({id, name})),
-          transaction: transactions.pop(),
         });
       }
     });
