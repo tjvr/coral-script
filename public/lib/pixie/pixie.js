@@ -727,8 +727,9 @@
         }, 1000)
       }
 
+      const message = data.result === undefined ? data.error : data.result
       var pos = script.blocks[0].worldPosition;
-      this.editor.showBubble(data.result || data.error, pos.x + script.width, pos.y);
+      this.editor.showBubble(message, pos.x + script.width, pos.y);
     }
   }
 

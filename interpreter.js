@@ -22,8 +22,9 @@ class Interpreter {
     return result
   }
 
-  narg(block) {
-    if (Array.isArray(block)) return this.doBlock()
+  async narg(block) {
+    if (Array.isArray(block)) return await this.doBlock(block)
+    return +block;
   }
 
   doBlock(block) {
@@ -39,6 +40,14 @@ class Interpreter {
   }
 }
 
+function infixN(f) {
+  return async function(a, b) {
+    a = await this.narg(a)
+    b = await this.narg(b)
+    return f(a, b)
+  }
+}
+
 Interpreter.prototype.table = {
   balance: async function() {
     const body = await this.api('/balance', {qs: {account_id: this.account_id}})
@@ -49,6 +58,20 @@ Interpreter.prototype.table = {
     const pot = pots.find(p => p.id === which || p.name === which)
     return pot.balance
   },
+
+  '>': infixN((a, b) => a > b),
+  '<': infixN((a, b) => a < b),
+  '=': infixN((a, b) => a === b),
+
+  '+': infixN((a, b) => a + b),
+  '-': infixN((a, b) => a - b),
+  '*': infixN((a, b) => a * b),
+  '/': infixN((a, b) => a / b),
+  '%': infixN((x, m) => {
+    x = x % m;
+    if (x / m < 0) x += m;
+    return x;
+  }),
 }
 
 async function coral(api, script, options) {
