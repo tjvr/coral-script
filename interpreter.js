@@ -23,8 +23,20 @@ class Interpreter {
     return new Promise((resolve, reject) => {
       this.api('/balance', {qs: {account_id: this.account_id}, 'expand[]': 'merchant'}, (error, response, body) => {
         if (error) return reject(error)
-        console.log(body)
         resolve(body.balance)
+        //resolve(`${body.balance} ${body.currency}`)
+      })
+    })
+  }
+
+  async x_potBalance(which) {
+    return new Promise((resolve, reject) => {
+      this.api('/pots', (error, response, body) => {
+        if (error) return reject(error)
+        const {pots} = body
+        const pot = pots.find(p => p.id === which || p.name === which)
+        resolve(pot.balance)
+        //resolve(`${pot.balance} ${pot.currency}`)
       })
     })
   }
