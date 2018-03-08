@@ -6,79 +6,95 @@ import (
 	"strconv"
 )
 
-func coerceNum(val interface{}) int64 {
-	switch val.(type) {
-	case float64:
-		return int64(val.(float64))
-	case int64:
-		return val.(int64)
-	case int:
-		return int64(val.(int))
-	case string:
-		n, err := strconv.ParseInt(val.(string), 10, 64)
-		if err != nil {
-			return 0
-		}
-		return n
-	default:
-		fmt.Printf("%v\n", reflect.TypeOf(val))
-		return 0
-	}
-}
-
-func num(t *Thread, val interface{}) (int64, error) {
+func eval(t *Thread, val interface{}) (Result, error) {
 	block, ok := val.([]interface{})
 	if !ok {
-		return coerceNum(val), nil
+		return val, nil
 	}
+	return executeBlock(t, block)
 
-	result, err := executeBlock(t, block)
+}
+
+func intArg(t *Thread, val interface{}) (int64, error) {
+	val, err := eval(t, val)
 	if err != nil {
 		return 0, err
 	}
-	return coerceNum(result), nil
+
+	switch val.(type) {
+	case float64:
+		return int64(val.(float64) + 0.5), nil
+	case int64:
+		return val.(int64), nil
+	case string:
+		n, err := strconv.ParseInt(val.(string), 10, 64)
+		if err != nil {
+			n, err := strconv.ParseFloat(val.(string), 64)
+			if err != nil {
+				return 0, nil
+			}
+			return int64(n), nil
+		}
+		return n, nil
+	default:
+		fmt.Printf("%v\n", reflect.TypeOf(val))
+		return 0, nil
+	}
 }
 
-func coerceBool(val interface{}) bool {
-	switch val {
-	case "true", true:
-		return true
-	case "false", false:
-		return false
+func floatArg(t *Thread, val interface{}) (float64, error) {
+	val, err := eval(t, val)
+	if err != nil {
+		return 0, err
 	}
-	return false
+
+	switch val.(type) {
+	case float64:
+		return val.(float64), nil
+	case int64:
+		return float64(val.(int64)), nil
+	case string:
+		n, err := strconv.ParseFloat(val.(string), 64)
+		if err != nil {
+			return 0, nil
+		}
+		return n, nil
+	default:
+		fmt.Printf("%v\n", reflect.TypeOf(val))
+		return 0, nil
+	}
 }
 
 func boolArg(t *Thread, val interface{}) (bool, error) {
-	block, ok := val.([]interface{})
-	if !ok {
-		return coerceBool(val), nil
-	}
-
-	result, err := executeBlock(t, block)
+	val, err := eval(t, val)
 	if err != nil {
 		return false, err
 	}
-	return coerceBool(result), nil
-}
 
-func coerceString(val interface{}) string {
-	str, ok := val.(string)
-	if !ok {
-		return ""
+	switch val {
+	case "true", true:
+		return true, nil
+	case "false", false:
+		return false, nil
+	default:
+		return false, nil
 	}
-	return str
 }
 
 func stringArg(t *Thread, val interface{}) (string, error) {
-	block, ok := val.([]interface{})
-	if !ok {
-		return coerceString(val), nil
-	}
-
-	result, err := executeBlock(t, block)
+	val, err := eval(t, val)
 	if err != nil {
 		return "", err
 	}
-	return coerceString(result), nil
+
+	switch val.(type) {
+	case string:
+		return val.(string), nil
+	case int64:
+		return strconv.FormatInt(val.(int64), 10), nil
+	case float64:
+		return fmt.Sprintf("%.2f", val.(float64)), nil
+	default:
+		return "", nil
+	}
 }

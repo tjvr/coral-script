@@ -30,16 +30,18 @@ func init() {
 		//"schemeTest": checkScheme,
 		//"txTimeAndDate": txTimeAndDate,
 
-		"+":   add,
-		"-":   sub,
-		"*":   mul,
-		"/":   div,
-		"%":   mod,
-		"<":   lt,
-		">":   gt,
-		"&":   and,
-		"|":   or,
-		"not": not,
+		"+":     add,
+		"-":     sub,
+		"*":     mul,
+		"/":     div,
+		"%":     mod,
+		"round": round,
+		"abs":   abs,
+		"<":     lt,
+		">":     gt,
+		"&":     and,
+		"|":     or,
+		"not":   not,
 		//"=":       eq,
 		"concatenate:with:": strConcat,
 		"letter:of:":        strIndex,
@@ -83,11 +85,11 @@ func add(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +100,11 @@ func sub(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -113,11 +115,11 @@ func mul(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -128,41 +130,63 @@ func div(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
-	return a / b, nil
+	return float64(a) / float64(b), nil
 }
 
 func mod(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
 	return ((a % b) + b) % b, nil
 }
 
+func round(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 1 {
+		return "", BadScript{"missing arguments"}
+	}
+	n, err := floatArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	return int64(n + 0.5), nil
+}
+
+func abs(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 1 {
+		return "", BadScript{"missing arguments"}
+	}
+	n, err := intArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	return int64(n + 0.5), nil
+}
+
 func lt(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -173,11 +197,11 @@ func gt(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := num(t, args[0])
+	a, err := intArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := num(t, args[1])
+	b, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +260,7 @@ func eq(t *Thread, args []interface{}) (Result, error) {
 		return "", BadScript{"missing arguments"}
 	}
 	// TODO execute arguments
-	// TODO coerce strings to numbers if necessary
+	// TODO coerce strings to intArg if necessary
 	return args[0] == args[1], nil
 }
 
@@ -263,7 +287,7 @@ func strIndex(t *Thread, args []interface{}) (Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	n, err := num(t, args[1])
+	n, err := intArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
