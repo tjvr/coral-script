@@ -691,7 +691,12 @@
     async init() {
       const data = await fetch("/config", {
         credentials: "include",
-      }).then(rsp => rsp.json())
+      }).then(rsp => {
+		if (rsp.status === 401) {
+		  window.location = '/login'
+		}
+		return rsp
+	  }).then(rsp => rsp.json())
 
       this.user_id = data.user_id
       this.account_id = data.account_id
