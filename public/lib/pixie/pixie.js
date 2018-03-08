@@ -710,22 +710,28 @@
 
       script.addRunningEffect();
 
-      const data = await fetch("/execute", {
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify({
-          user_id: this.user_id,
-          account_id: this.account_id,
-          script: script.blocks,
-        }),
-        headers: new Headers({
-          "Content-Type": "application/json"
-        })
-      }).then(rsp => rsp.json())
+      let isError 
+      let data
+      try {
+        data = await fetch("/execute", {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({
+            user_id: this.user_id,
+            account_id: this.account_id,
+            script: script.blocks,
+          }),
+          headers: new Headers({
+            "Content-Type": "application/json"
+          })
+        }).then(rsp => rsp.json())
+      } catch (err) {
+        isError = true
+      }
 
       script.removeRunningEffect();
 
-      if (data.error) {
+      if (data.error || isError) {
         const redOutline = script.outline.bind(script, 2, '#faa')
         script.addEffect(redOutline);
         setTimeout(() => {
@@ -733,6 +739,7 @@
         }, 1000)
       }
 
+      if (data === undefined) return
       const message = data.result === undefined ? data.error : data.result
       if (message === undefined) return
       var pos = script.blocks[0].worldPosition;
