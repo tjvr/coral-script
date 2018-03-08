@@ -1,8 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
 
@@ -12,12 +10,9 @@ import (
 func handleExecute(req typhon.Request) typhon.Response {
 
 	body := &ExecuteRequest{}
-	fmt.Println("moo")
 	if err := req.Decode(body); err != nil {
-		fmt.Println("bbb")
 		return typhon.Response{Error: err}
 	}
-	fmt.Println("aaa")
 
 	switch {
 	case body.AccessToken == "":

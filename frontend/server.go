@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -8,6 +9,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/monzo/typhon"
+
+	"github.com/tjvr/coral-script/interpreter"
 	"github.com/tjvr/go-monzo"
 )
 
@@ -110,13 +114,19 @@ func main() {
 	})
 
 	type ExecuteRequest struct {
-		Script         []interface{}
+		Script         [][]interface{}
 		IdempotencyKey string
 	}
 
 	http.HandleFunc("/execute", func(w http.ResponseWriter, req *http.Request) {
 		if req.Method != "POST" {
 			renderError(w, HandlerError{"method not allowed", 405})
+			return
+		}
+
+		session := auth.GetSession(w, req)
+		if !session.IsAuthenticated() {
+			renderError(w, HandlerError{"not authenticated", 401})
 			return
 		}
 
@@ -132,9 +142,20 @@ func main() {
 			fmt.Printf("%#v\n", s)
 		}
 
-		renderJSON(w, map[string]string{
-			"result": "yay",
-		})
+		rawRsp := typhon.NewRequest(context.Background(), "POST", "http://localhost:1234/execute", &interpreter.ExecuteRequest{
+			AccessToken: session.Client.AccessToken,
+			UserID:      session.Client.UserID,
+			Script:      body.Script,
+		}).Send().Response()
+
+		rsp := &interpreter.ExecuteResponse{}
+		if err := rawRsp.Decode(rsp); err != nil {
+			fmt.Println(err)
+			renderError(w, HandlerError{"execute error", 500})
+			return
+		}
+
+		renderJSON(w, rsp)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
