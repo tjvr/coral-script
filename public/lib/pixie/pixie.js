@@ -86,7 +86,8 @@
       '%': ['r', '%n mod %n', 8, '', ''],
       'rounded': ['r', 'round %n', 8, ''],
 
-      'computeFunction:of:': ['r', '%m.mathOp of %n', 8, 'abs', 9],
+      //'computeFunction:of:': ['r', '%m.mathOp of %n', 8, 'abs', 9],
+      'abs': ['r', 'abs of %n', 8, -10],
 
       // control - sprite
       //'doRepeat': ['c', '@loop repeat %n %t', 6, 10],
@@ -195,7 +196,7 @@
       '%',
       'rounded',
       '--',
-      'computeFunction:of:'
+      'abs'
     ],
     9: [
       // variables
@@ -254,19 +255,14 @@
   };
 
   Block.prototype.groups = [ // NS
-    ['changeXposBy:', 'xpos:', 'changeYposBy:', 'ypos:'],
-    ['xpos', 'ypos'],
-    ['say:', 'think:'],
-    ['say:duration:elapsed:from:', 'think:duration:elapsed:from:'],
-    ['show', 'hide'],
-    ['playSound:', 'doPlaySoundAndWait'],
-    ['putPenDown', 'putPenUp'],
-    ['setPenHueTo:', 'changePenHueBy:', 'setPenShadeTo:', 'changePenShadeBy:', 'changePenSizeBy:', 'setPenSizeTo:'],
-    ['doIf', 'doIfElse'],
-    ['mouseX', 'mouseY'],
+    ['whenTxDebit', 'whenTxCredit'],
+    ['potDeposit', 'potWithdraw'],
+    //['txMerchantName', 'txMerchantEmoji', 'txMerchantCountry'],
+    //['balance', 'potBalance'],
     ['+', '-', '*', '/', '%'],
     ['&', '|'],
     ['<', '=', '>']
+    //['doIf', 'doIfElse'],
   ];
 
   Block.prototype.defaultContextMenu = Object.getOwnPropertyDescriptor(Block.prototype, 'contextMenu').get;

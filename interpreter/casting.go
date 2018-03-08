@@ -93,7 +93,13 @@ func stringArg(t *Thread, val interface{}) (string, error) {
 	case int64:
 		return strconv.FormatInt(val.(int64), 10), nil
 	case float64:
-		return fmt.Sprintf("%.2f", val.(float64)), nil
+		f := val.(float64)
+		if f == float64(int64(f)) {
+			return strconv.FormatInt(int64(f), 10), nil
+		}
+		return fmt.Sprintf("%.2f", f), nil
+	case bool:
+		return strconv.FormatBool(val.(bool)), nil
 	default:
 		return "", nil
 	}

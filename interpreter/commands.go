@@ -13,8 +13,8 @@ func init() {
 		"whenTxCredit": nop,
 		"whenTxDebit":  nop,
 
-		"balance": getBalance,
-		//"potBalance": getPotBalance,
+		"balance":    getBalance,
+		"potBalance": getPotBalance,
 		//"potDeposit": depositIntoPot,
 		//"potWithdraw": withdrawFromPot,
 
@@ -26,8 +26,8 @@ func init() {
 		"txMerchantName":  txGetter(func(tx *monzo.Transaction) Result { return tx.Merchant.Name }),
 		"txMerchantEmoji": txGetter(func(tx *monzo.Transaction) Result { return tx.Merchant.Emoji }),
 		//"txMerchantCountry":         txGetter(func(tx *monzo.Transaction) Result { return tx.Merchant.Address.Country }),
-		//"categoryTest": checkCategory,
-		//"schemeTest": checkScheme,
+		"categoryTest": checkCategory,
+		"schemeTest":   checkScheme,
 		//"txTimeAndDate": txTimeAndDate,
 
 		"+":     add,
@@ -64,19 +64,69 @@ func getBalance(t *Thread, args []interface{}) (Result, error) {
 		return nil, err
 	}
 
-	return rsp.Balance, nil
+	return float64(rsp.Balance) / 100, nil
 }
 
 func getPotBalance(t *Thread, args []interface{}) (Result, error) {
-	potName, ok := args[0].(string)
-	if !ok {
-		return "", BadScript{"potBalance: missing argument"}
+	if len(args) != 1 {
+		return "", BadScript{"missing argument"}
 	}
-	if potName == "" {
+	name, err := stringArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	potID, err := t.GetPotID(name)
+	if err != nil {
+		return nil, err
+	}
+	if potID == "" {
+		return "", nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	pot, err := t.Client.Pot(potID)
+	if err != nil {
+		return nil, err
+	}
+	return float64(pot.Balance) / 100, nil
+}
+
+func depositIntoPot(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 2 {
+		return "", BadScript{"missing arguments"}
+	}
+	a, err := floatArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	name, err := stringArg(t, args[1])
+	if err != nil {
+		return nil, err
+	}
+
+	accountID, err := t.GetAccountID()
+	if err != nil {
+		return nil, err
+	}
+
+	potID, err := t.GetPotID(name)
+	if err != nil {
+		return nil, err
+	}
+	if potID == "" {
 		return "", nil
 	}
 
-	return "", nil
+	_, err = t.Client.Deposit(&monzo.DepositRequest{
+		AccountID:      accountID,
+		Amount:         int64(a / 100),
+		IdempotencyKey: t.IdempotencyKey,
+		PotID:          potID,
+	})
+	return "", err
 }
 
 /* Operators */
@@ -85,11 +135,11 @@ func add(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -100,11 +150,11 @@ func sub(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +165,11 @@ func mul(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -130,30 +180,32 @@ func div(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
-	return float64(a) / float64(b), nil
+	return a / b, nil
 }
 
 func mod(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
-	return ((a % b) + b) % b, nil
+	ai := int64(a*100 + 0.5)
+	bi := int64(b*100 + 0.5)
+	return float64(((ai%bi)+bi)%bi) / 100, nil
 }
 
 func round(t *Thread, args []interface{}) (Result, error) {
@@ -171,22 +223,25 @@ func abs(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 1 {
 		return "", BadScript{"missing arguments"}
 	}
-	n, err := intArg(t, args[0])
+	n, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	return int64(n + 0.5), nil
+	if n < 0 {
+		return -n, nil
+	}
+	return n, nil
 }
 
 func lt(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -197,11 +252,11 @@ func gt(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	a, err := intArg(t, args[0])
+	a, err := floatArg(t, args[0])
 	if err != nil {
 		return nil, err
 	}
-	b, err := intArg(t, args[1])
+	b, err := floatArg(t, args[1])
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tjvr/go-monzo"
 )
@@ -17,10 +18,12 @@ func (b BadScript) Error() string {
 }
 
 type Thread struct {
-	Client      *monzo.Client
-	Transaction *monzo.Transaction
-	AccountID   string
-	Stopped     bool
+	Client         *monzo.Client
+	Transaction    *monzo.Transaction
+	IdempotencyKey string
+	AccountID      string
+	Pots           []*monzo.Pot
+	Stopped        bool
 }
 
 func (t *Thread) GetAccountID() (string, error) {
@@ -41,6 +44,31 @@ func (t *Thread) GetAccountID() (string, error) {
 		return acc.ID, nil
 	}
 	return "", fmt.Errorf("no retail accounts")
+}
+
+func (t *Thread) GetPotID(name string) (string, error) {
+	if name == "" {
+		return "", nil
+	}
+	if strings.HasPrefix(name, "pot_") {
+		return name, nil
+	}
+
+	// nb. this caching has no effect if the user has no pots.
+	// But why would they do that?!
+	if t.Pots == nil {
+		var err error
+		t.Pots, err = t.Client.Pots()
+		if err != nil {
+			return "", err
+		}
+	}
+	for _, pot := range t.Pots {
+		if pot.Name == name {
+			return pot.ID, nil
+		}
+	}
+	return "", nil
 }
 
 func executeScript(t *Thread, blocks [][]interface{}) (Result, error) {
