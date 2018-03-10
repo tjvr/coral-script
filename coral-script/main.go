@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/tjvr/coral-script/interpreter"
+	"./interpreter"
 )
 
 func main() {
