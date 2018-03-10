@@ -727,7 +727,7 @@
 
       script.removeRunningEffect();
 
-      if (data.error || isError) {
+      if (data.script_error || isError) {
         const redOutline = script.outline.bind(script, 2, '#faa')
         script.addEffect(redOutline);
         setTimeout(() => {
@@ -735,9 +735,10 @@
         }, 1000)
       }
 
+      console.log(data)
       if (data === undefined) return
-      const message = data.result === undefined ? data.error : data.result
-      if (message === undefined) return
+      const message = data.result == null ? data.script_error : data.result
+      if (message == null || message === "") return
       var pos = script.blocks[0].worldPosition;
       this.editor.showBubble(message, pos.x + script.width, pos.y);
     }

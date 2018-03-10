@@ -13,6 +13,10 @@ func init() {
 		"whenTxCredit": nop,
 		"whenTxDebit":  nop,
 
+		"doIf":     doIf,
+		"doIfElse": doIf,
+		// "doUntil"
+
 		"balance":    getBalance,
 		"potBalance": getPotBalance,
 		//"potDeposit": depositIntoPot,
@@ -52,6 +56,37 @@ func init() {
 func nop(t *Thread, args []interface{}) (Result, error) {
 	return nil, nil
 }
+
+func doIf(t *Thread, args []interface{}) (Result, error) {
+	if len(args) < 2 || len(args) > 3 {
+		return "", BadScript{"missing argument"}
+	}
+	cond, err := boolArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if cond {
+		blocks, ok := args[1].([][]interface{}) // TODO
+		if !ok {
+			return "", BadScript{"not a stack"}
+		}
+		_, err := executeScript(t, blocks)
+		return nil, err
+	}
+
+	if len(args) == 2 {
+		return nil, nil
+	}
+	blocks, ok := args[2].([][]interface{})
+	if !ok {
+		return "", BadScript{"else not a stack"}
+	}
+	_, err = executeScript(t, blocks)
+	return nil, err
+}
+
+/* Monzo */
 
 func getBalance(t *Thread, args []interface{}) (Result, error) {
 	accountID, err := t.GetAccountID()
