@@ -1,0 +1,70 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: coral-web
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: coral-web
+    spec:
+      containers:
+      - name: coral-web
+        image: docker.tjvr.org/coral-web
+        ports:
+          - name: web
+            containerPort: 8080
+        env:
+          - name: INTERPRETER
+            value: "http://coral-script:8000/execute"
+          - name: CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: coral-client
+                key: CLIENT_ID
+          - name: CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: coral-client
+                key: CLIENT_SECRET
+          - name: CALLBACK_URI
+            value: https://coral-script.tjvr.org/callback
+      imagePullSecrets:
+      - name: regsecret
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: coral-web
+spec:
+  ports:
+  - protocol: TCP
+    port: 8080
+  selector:
+    app: coral-web
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: coral
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/tls-acme: "true"
+spec:
+  tls:
+  - hosts:
+    - coral-script.tjvr.org
+    secretName: coral-tls
+  rules:
+  - host: coral-script.tjvr.org
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: coral-web
+          servicePort: 8080
+
+
