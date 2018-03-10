@@ -24,7 +24,13 @@ func init() {
 		"potDeposit":  depositIntoPot,
 		"potWithdraw": withdrawFromPot,
 
-		"txAmount":        txGetter(func(tx *monzo.Transaction) Result { return tx.Amount }),
+		"txAmount": txGetter(func(tx *monzo.Transaction) Result {
+			amount := float64(tx.Amount) / 100
+			if (amount) < 0 {
+				return -amount
+			}
+			return amount
+		}),
 		"txDescription":   txGetter(func(tx *monzo.Transaction) Result { return tx.Description }),
 		"txNotes":         txGetter(func(tx *monzo.Transaction) Result { return tx.Notes }),
 		"txLocalCurrency": txGetter(func(tx *monzo.Transaction) Result { return tx.LocalCurrency }),

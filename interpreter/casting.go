@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func eval(t *Thread, val interface{}) (Result, error) {
@@ -27,9 +28,10 @@ func intArg(t *Thread, val interface{}) (int64, error) {
 	case int64:
 		return val.(int64), nil
 	case string:
-		n, err := strconv.ParseInt(val.(string), 10, 64)
+		str := stripCurrency(val.(string))
+		n, err := strconv.ParseInt(str, 10, 64)
 		if err != nil {
-			n, err := strconv.ParseFloat(val.(string), 64)
+			n, err := strconv.ParseFloat(str, 64)
 			if err != nil {
 				return 0, nil
 			}
@@ -54,7 +56,8 @@ func floatArg(t *Thread, val interface{}) (float64, error) {
 	case int64:
 		return float64(val.(int64)), nil
 	case string:
-		n, err := strconv.ParseFloat(val.(string), 64)
+		str := stripCurrency(val.(string))
+		n, err := strconv.ParseFloat(str, 64)
 		if err != nil {
 			return 0, nil
 		}
@@ -103,4 +106,8 @@ func stringArg(t *Thread, val interface{}) (string, error) {
 	default:
 		return "", nil
 	}
+}
+
+func stripCurrency(str string) string {
+	return strings.Replace(str, "£", "", 1)
 }

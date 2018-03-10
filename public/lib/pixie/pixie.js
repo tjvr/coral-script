@@ -52,7 +52,7 @@
       'txAmount': ['r', 'amount', 7],
       'txDescription': ['r', 'description', 7],
       'txNotes': ['r', 'notes', 7],
-      'txLocalAmount': ['r', 'original currency', 7],
+      'txLocalCurrency': ['r', 'original currency', 7],
       //'txLocalCurrency': ['r', 'local amount', 7],
 
       'isTopup': ['b', 'is topup?', 7],
@@ -197,7 +197,7 @@
       'txAmount',
       'txDescription',
       'txNotes',
-      'txLocalAmount',
+      'txLocalCurrency',
       '--',
       'isTopup',
       'categoryTest',
