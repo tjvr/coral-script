@@ -125,10 +125,19 @@
       pot: function(arg) {
         var m = new Menu
         const exec = arg.app.editor.exec;
-        m.addAll(exec.pots.map(p => p.name))
+        for (let pot of exec.pots) {
+          m.add([pot.name, pot.id])
+        }
         return m
       },
-    }
+    },
+    getText(value) {
+      if (/pot_/.test(value)) {
+        if (!editor.exec.pots) return
+        return editor.exec.pots.find(p => p.id === value).name
+      }
+      return value
+    },
   });
 
   
@@ -231,7 +240,7 @@
     return values ? vis.util.format(text, values) : text;
   }
 
-  var menusThatAcceptReporters = ['broadcast', 'costume', 'backdrop', 'scene', 'sound', 'spriteOnly', 'spriteOrMouse', 'spriteOrStage', 'touching'];
+  var menusThatAcceptReporters = [];
   Arg.prototype.acceptsDropOf = function(b) {
     return this.type !== 't' && this.type !== 'l' && (this.type !== 'b' || b.isBoolean) && (this.type !== 'm' || menusThatAcceptReporters.indexOf(this.menu) !== -1);
   };
@@ -330,11 +339,18 @@
     'sound': ['record...'],
     'var': ['delete variable', 'rename variable'],
     'costume': [],
-    'key': ['up arrow', 'down arrow', 'left arrow', 'right arrow', 'space']
+    'key': ['up arrow', 'down arrow', 'left arrow', 'right arrow', 'space'],
+    'scheme': ['mastercard', 'fish'],
   };
 
   Arg.prototype.shouldTranslate = function(value) {
     if (this.type === 'l') return false;
+
+    if (this.menu === 'pot') {
+      return true
+    }
+
+
     if (['spriteOnly', 'spriteOrMouse', 'spriteOrStage', 'touching'].indexOf(this.menu) !== -1) {
       return ['_myself_', '_mouse_', '_edge_', '_stage_'].indexOf(value) !== -1;
     }
