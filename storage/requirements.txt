@@ -1,0 +1,6 @@
+Werkzeug==0.14.1
+click==6.7
+flask==0.12.2
+itsdangerous==0.24
+peewee==3.0.19
+gunicorn==19.7.1
