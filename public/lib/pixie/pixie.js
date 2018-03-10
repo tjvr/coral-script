@@ -137,20 +137,37 @@
         m.addAll(['expenses', 'transport', 'cash', 'bills', 'entertainment', 'shopping', 'holidays', 'groceries'])
         return m
       },
+      scheme: function() {
+        const m = new Menu
+        for (let name in schemes) {
+          m.add([schemes[name], name])
+        }
+        return m
+      },
     },
     getText(value) {
       if (/pot_/.test(value)) {
-        if (!editor.exec.pots) return
-        return editor.exec.pots.find(p => p.id === value).name
+        const pot = editor.exec.pots.find(p => p.id === value)
+        return pot ? pot.name : value
       }
       switch (value) {
         case "eating_out": return "eating out"
       }
+      if (schemes[value]) return schemes[value]
       return value
     },
   });
 
-
+  const schemes = {
+    'mastercard': 'Mastercard',
+    'p2p_payment': 'peer-to-peer',
+    'topup': 'Monzo top up',
+    'payport_faster_payments': 'Faster Payments',
+    'bacs': 'Direct Debit',
+    'rbs_cheque': 'cheque',
+    'chaps': 'CHAPS',
+    'prepaid-bridge': 'prepaid card',
+  }
   
   var palettes = {
     2: [
@@ -343,27 +360,13 @@
   };
 
   Arg.prototype.menuTranslations = {
-    'attribute': ['x position', 'y position', 'direction', 'costume #', 'costume name', 'size', 'volume', 'backdrop #', 'backdrop name', 'volume'],
-    'backdrop': ['next backdrop', 'previous backdrop'],
-    'broadcast': ['new message...'],
-    'list': ['delete list', 'rename list'],
-    'sound': ['record...'],
-    'var': ['delete variable', 'rename variable'],
-    'costume': [],
-    'key': ['up arrow', 'down arrow', 'left arrow', 'right arrow', 'space'],
-    'scheme': ['mastercard', 'fish'],
+    category: ['eating_out'],
   };
 
   Arg.prototype.shouldTranslate = function(value) {
     if (this.type === 'l') return false;
-
-    if (this.menu === 'pot') {
+    if (['pot', 'scheme'].indexOf(this.menu) !== -1) {
       return true
-    }
-
-
-    if (['spriteOnly', 'spriteOrMouse', 'spriteOrStage', 'touching'].indexOf(this.menu) !== -1) {
-      return ['_myself_', '_mouse_', '_edge_', '_stage_'].indexOf(value) !== -1;
     }
     var translations = this.menuTranslations[this.menu];
     return translations ? translations.indexOf(value) !== -1 : true;
@@ -808,6 +811,8 @@
 
       this.app.resize();
       this.statusEl.textContent = "Account: " + config.account_description
+
+      this.load()
     }
 
     load() {
@@ -940,6 +945,5 @@
   const editor = window.editor = new Editor()
   document.body.appendChild(editor.el)
   editor.app.resize();
-  editor.load();
 
 }());
