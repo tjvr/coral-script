@@ -21,9 +21,12 @@ func handleExecute(req typhon.Request) typhon.Response {
 		return typhon.Response{Error: terrors.BadRequest("user_id", "Missing", nil)}
 	case body.Script == nil:
 		return typhon.Response{Error: terrors.BadRequest("script", "Missing", nil)}
+	case body.IdempotencyKey == "":
+		return typhon.Response{Error: terrors.BadRequest("idempotency_key", "Missing", nil)}
 	}
 
 	t := &Thread{
+		IdempotencyKey: body.IdempotencyKey,
 		Client: &monzo.Client{
 			BaseURL:     APIBaseURL,
 			AccessToken: body.AccessToken,

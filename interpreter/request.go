@@ -5,9 +5,10 @@ import (
 )
 
 type ExecuteRequest struct {
-	AccessToken string          `json:"access_token"`
-	UserID      string          `json:"user_id"`
-	Script      [][]interface{} `json:"script"`
+	AccessToken    string          `json:"access_token"`
+	UserID         string          `json:"user_id"`
+	Script         [][]interface{} `json:"script"`
+	IdempotencyKey string          `json:"idempotency_key"`
 }
 
 type ExecuteResponse struct {

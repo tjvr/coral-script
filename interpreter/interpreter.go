@@ -68,7 +68,7 @@ func (t *Thread) GetPotID(name string) (string, error) {
 			return pot.ID, nil
 		}
 	}
-	return "", nil
+	return "", fmt.Errorf("pot not found: " + name)
 }
 
 func executeScript(t *Thread, blocks [][]interface{}) (Result, error) {

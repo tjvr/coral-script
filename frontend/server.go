@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/monzo/typhon"
 
@@ -143,9 +145,10 @@ func main() {
 		}
 
 		rawRsp := typhon.NewRequest(context.Background(), "POST", "http://localhost:1234/execute", &interpreter.ExecuteRequest{
-			AccessToken: session.Client.AccessToken,
-			UserID:      session.Client.UserID,
-			Script:      body.Script,
+			AccessToken:    session.Client.AccessToken,
+			UserID:         session.Client.UserID,
+			Script:         body.Script,
+			IdempotencyKey: randomString(20),
 		}).Send().Response()
 
 		rsp := &interpreter.ExecuteResponse{}
@@ -186,4 +189,18 @@ func renderJSON(w http.ResponseWriter, rsp interface{}) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randomString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }

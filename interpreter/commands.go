@@ -17,10 +17,10 @@ func init() {
 		"doIfElse": doIf,
 		// "doUntil"
 
-		"balance":    getBalance,
-		"potBalance": getPotBalance,
-		//"potDeposit": depositIntoPot,
-		//"potWithdraw": withdrawFromPot,
+		"balance":     getBalance,
+		"potBalance":  getPotBalance,
+		"potDeposit":  depositIntoPot,
+		"potWithdraw": withdrawFromPot,
 
 		"txAmount":        txGetter(func(tx *monzo.Transaction) Result { return tx.Amount }),
 		"txDescription":   txGetter(func(tx *monzo.Transaction) Result { return tx.Description }),
@@ -151,13 +151,42 @@ func depositIntoPot(t *Thread, args []interface{}) (Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if potID == "" {
-		return "", nil
-	}
 
 	_, err = t.Client.Deposit(&monzo.DepositRequest{
 		AccountID:      accountID,
-		Amount:         int64(a / 100),
+		Amount:         int64(a * 100),
+		IdempotencyKey: t.IdempotencyKey,
+		PotID:          potID,
+	})
+	return "", err
+}
+
+func withdrawFromPot(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 2 {
+		return "", BadScript{"missing arguments"}
+	}
+	a, err := floatArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	name, err := stringArg(t, args[1])
+	if err != nil {
+		return nil, err
+	}
+
+	accountID, err := t.GetAccountID()
+	if err != nil {
+		return nil, err
+	}
+
+	potID, err := t.GetPotID(name)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = t.Client.Withdraw(&monzo.WithdrawRequest{
+		AccountID:      accountID,
+		Amount:         int64(a * 100),
 		IdempotencyKey: t.IdempotencyKey,
 		PotID:          potID,
 	})
