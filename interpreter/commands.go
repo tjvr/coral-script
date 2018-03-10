@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/tjvr/go-monzo"
 )
@@ -58,6 +59,7 @@ func init() {
 		"concatenate:with:": strConcat,
 		"letter:of:":        strIndex,
 		"stringLength:":     strLength,
+		"randomFrom:to:":    randomInt,
 	}
 }
 
@@ -277,6 +279,9 @@ func mod(t *Thread, args []interface{}) (Result, error) {
 	}
 	ai := int64(a*100 + 0.5)
 	bi := int64(b*100 + 0.5)
+	if bi == 0 {
+		return "", fmt.Errorf("divide by zero")
+	}
 	return float64(((ai%bi)+bi)%bi) / 100, nil
 }
 
@@ -430,6 +435,21 @@ func strLength(t *Thread, args []interface{}) (Result, error) {
 		return nil, err
 	}
 	return len(s), nil
+}
+
+func randomInt(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 2 {
+		return "", BadScript{"missing arguments"}
+	}
+	a, err := intArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	b, err := intArg(t, args[1])
+	if err != nil {
+		return nil, err
+	}
+	return a + rand.Int63n(b-a+1), nil
 }
 
 /* Transactions */

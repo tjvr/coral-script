@@ -66,8 +66,8 @@
       // operators
       '+': ['r', '%n + %n', 8, '', ''],
       '-': ['r', '%n - %n', 8, '', ''],
-      '*': ['r', '%n * %n', 8, '', ''],
-      '/': ['r', '%n / %n', 8, '', ''],
+      '*': ['r', '%n × %n', 8, '', ''],
+      '/': ['r', '%n ∕ %n', 8, '', ''],
 
       'randomFrom:to:': ['r', 'pick random %n to %n', 8, 1, 10],
 
@@ -84,7 +84,7 @@
       'stringLength:': ['r', 'length of %s', 8, 'world'],
 
       '%': ['r', '%n mod %n', 8, '', ''],
-      'rounded': ['r', 'round %n', 8, ''],
+      'round': ['r', 'round %n', 8, ''],
 
       //'computeFunction:of:': ['r', '%m.mathOp of %n', 8, 'abs', 9],
       'abs': ['r', 'abs of %n', 8, -10],
@@ -173,7 +173,7 @@
     2: [
       'balance',
       '--',
-      'createFeedItem',
+      // 'createFeedItem', // TODO
     ],
     3: [
       // pots
@@ -189,9 +189,9 @@
       '---',
       'doIf',
       'doIfElse',
-      'doUntil',
+      //'doUntil', // TODO
       '--',
-      'stop',
+      //'stop', // TODO
     ],
     7: [
       'txAmount',
@@ -205,9 +205,9 @@
       '--',
       'txMerchantName',
       'txMerchantEmoji',
-      'txMerchantCountry',
+      // 'txMerchantCountry', // TODO
       '--',
-      'txTimeAndDate',
+      //'txTimeAndDate', // TODO
     ],
     8: [
       // operators
@@ -231,7 +231,7 @@
       'stringLength:',
       '--',
       '%',
-      'rounded',
+      'round',
       '--',
       'abs'
     ],
