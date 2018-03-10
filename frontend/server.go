@@ -41,7 +41,7 @@ func main() {
 		if session == nil {
 			return
 		}
-		http.Redirect(w, req, "/editor", http.StatusTemporaryRedirect)
+		http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
 	})
 
 	http.HandleFunc("/login", auth.Login)
@@ -49,28 +49,6 @@ func main() {
 	http.HandleFunc("/logout", func(w http.ResponseWriter, req *http.Request) {
 		auth.Logout(w, req)
 		http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
-	})
-
-	http.HandleFunc("/editor", func(w http.ResponseWriter, req *http.Request) {
-		cl := auth.EnsureAuthenticated(w, req)
-		if cl == nil {
-			return
-		}
-
-		accounts, err := cl.Accounts("uk_retail")
-		if err != nil {
-			// TODO errors
-			return
-		}
-		if len(accounts) == 0 {
-			// TODO errors
-			return
-		}
-		retailAcc := accounts[0]
-
-		fmt.Fprintf(w, "Hello, %s", html.EscapeString(retailAcc.Description))
-
-		// TODO render authenticated editor
 	})
 
 	http.HandleFunc("/config", func(w http.ResponseWriter, req *http.Request) {

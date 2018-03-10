@@ -13,6 +13,7 @@ body {
 
 button {
   outline: 0;
+  cursor: pointer;
 }
 button::-moz-focus-inner {
   border: 0;

@@ -36,6 +36,7 @@
       //'whenTxLoad': ['h', 'when I 💰 top up', 5],
       'whenTxCredit': ['h', 'when I receive ➕', 5],
       'whenTxDebit': ['h', 'when I spend ➖', 5],
+      'everyDay': ['h', 'every day at 4am ⏰', 5],
 
       // account
       'balance': ['r', 'account balance', 2],
@@ -109,13 +110,7 @@
       var: function(arg) {
         var m = new Menu;
         var editor = arg.app.editor;
-        m.addAll(editor.stage.variables.map(getName));
-        if (editor.selectedSprite.isSprite && editor.selectedSprite.variables.length) {
-          if (editor.stage.variables.length) {
-            m.add(Menu.line);
-          }
-          m.addAll(editor.selectedSprite.variables.map(getName));
-        }
+        m.addAll(Object.keys(editor.exec.variables));
         return m;
       },
       timeAndDate: function() {
@@ -188,6 +183,8 @@
       // control
       'whenTxCredit',
       'whenTxDebit',
+      '---',
+      'everyDay',
       '---',
       'doIf',
       'doIfElse',
@@ -323,13 +320,7 @@
           this.args[0].value = value;
         }.bind(this);
         m.addLine();
-        var globals = isVar ? editor.stage.variables : editor.stage.lists;
-        var locals = isVar ? editor.selectedSprite.variables : editor.selectedSprite.lists;
-        m.addAll(globals.map(getName));
-        if (editor.selectedSprite.isSprite && locals.length) {
-          if (globals.length) m.addLine();
-          m.addAll(locals.map(getName));
-        }
+        m.addAll(Object.keys(editor.exec.variables));
       }
     } else if (!this.workspace.isPalette) {
       m.addLine();
@@ -938,20 +929,19 @@
     }
 
     async init() {
-      const data = await fetch("/config", {
+      const rsp = await fetch("/config", {
         credentials: "include",
-      }).then(rsp => {
-		if (rsp.status === 401) {
-		  window.location = '/login'
-		}
-		return rsp
-	  }).then(rsp => rsp.json())
+      })
+      if (rsp.status === 401) {
+        return
+      }
+      const config = await rsp.json()
 
-      this.user_id = data.user_id
-      this.account_id = data.account_id
-      this.pots = data.pots
-      //this.variables = data.variables // TODO
-      return data
+      this.user_id = config.user_id
+      this.account_id = config.account_id
+      this.pots = config.pots
+      //this.variables = config.variables // TODO
+      return config
     }
 
     async runScript(script) {
@@ -1010,10 +1000,8 @@
       this.save = this.save.bind(this)
 
       this.el = cl('editor Visual-no-select', [
-        cl('top-bar', [
+        this.topBar = cl('top-bar', [
           this.statusEl = cl('status', ["Loading..."]),
-          el('a', {className: 'project-button', 'href': '/logout'}, ['Log Out']),
-          el('button', {className: 'project-button bs-primary', 'onclick': this.save}, ['Save']),
         ]),
         cl('tab-panel-content', [this.scriptsPanel.el]),
       ])
@@ -1032,14 +1020,25 @@
 
     async init() {
       const config = await this.exec.init()
-
       this.app.resize();
+
+      if (!config) {
+        this.statusEl.textContent = "Anonymous"
+      this.topBar.appendChild(el('a', {className: 'project-button bs-primary', 'href': '/login'}, ['🔑 Login']))
+        this.load()
+        return
+      }
+
+      this.topBar.appendChild(el('button', {className: 'project-button bs-primary', 'onclick': this.save}, ['💾 Save']))
+      this.topBar.appendChild(el('a', {className: 'project-button', 'href': '/logout'}, ['Log Out']))
+
       this.statusEl.textContent = "Account: " + config.account_description
 
-      this.load()
+      this.load(config)
     }
 
-    load() {
+    load(config) {
+      // TODO load from localStorage only if no config
       if (!localStorage.coralScript) return
       let json
       try {
