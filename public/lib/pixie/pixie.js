@@ -130,15 +130,26 @@
         }
         return m
       },
+      category: function() {
+        const m = new Menu
+        m.add('general')
+        m.add(['eating out', 'eating_out'])
+        m.addAll(['expenses', 'transport', 'cash', 'bills', 'entertainment', 'shopping', 'holidays', 'groceries'])
+        return m
+      },
     },
     getText(value) {
       if (/pot_/.test(value)) {
         if (!editor.exec.pots) return
         return editor.exec.pots.find(p => p.id === value).name
       }
+      switch (value) {
+        case "eating_out": return "eating out"
+      }
       return value
     },
   });
+
 
   
   var palettes = {
