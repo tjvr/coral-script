@@ -101,6 +101,8 @@
 
       // variables
       'readVariable': ['r', '%l', 9, 'variable'],
+      'setVar:to:': ['c', 'set %m.var to %s', 9, 'variable', 0],
+      'changeVar:by:': ['c', 'change %m.var by %n', 9, 'variable', 1],
 
     },
     menus: {
@@ -168,7 +170,7 @@
     'chaps': 'CHAPS',
     'prepaid-bridge': 'prepaid card',
   }
-  
+
   var palettes = {
     2: [
       'balance',
@@ -243,8 +245,6 @@
         '--',
         ['setVar:to:', {first: 'var'}, '0'],
         ['changeVar:by:', {first: 'var'}, 1],
-        ['showVariable:', {first: 'var'}],
-        ['hideVariable:', {first: 'var'}],
         '--'
       ]},
     ],
@@ -310,7 +310,6 @@
       var isVar = this.name === 'readVariable';
       if (this.workspace.isPalette) {
         m.insertAllTranslated(0, [
-          isVar ? 'rename variable' : 'rename list',
           [isVar ? 'delete variable' : 'delete list', function() {
             if (isVar) {
               editor.removeVariable(this.args[0].value);
@@ -561,8 +560,7 @@
     }
 
     this.buttons = {};
-    // TODO variables
-    [2, 6, 3, 8, 7].forEach(function(id) {
+    [2, 6, 3, 8, 7, 9].forEach(function(id) {
       var cat = vis.getCategory(id);
 
       var b = cl('button', 'palette-button', {value: id}, [
@@ -669,7 +667,7 @@
     if (typeof arg !== 'object') return arg;
     if (arg.first) {
       var key = arg.first === 'var' ? 'variables' : arg.first === 'list' ? 'lists' : '';
-      if (key) return this.editor[key].map(getName).sort()[0];
+      if (key) return Object.keys(this.editor.exec[key]).sort()[0];
       if (arg.first === 'pot') {
         // TODO
         return '';
@@ -680,7 +678,7 @@
 
   ScriptsPanel.prototype.appendCondition = function(condition) {
     switch (condition) {
-      case 'variables': return this.editor.variables.length;
+      case 'variables': return Object.keys(this.editor.exec.variables).length;
     }
   };
 
@@ -690,13 +688,10 @@
     }
 
     function collection(key, make) { // NS
-      var stagec = stage[key].map(getName).sort().map(make);
-      var spritec = sprite.isStage ? [] : sprite[key].map(getName).sort().map(make);
-      return stagec.concat(stagec.length && spritec.length ? '==' : [], spritec);
+      return Object.keys(exec[key]).sort().map(make);
     }
 
-    var stage = this.editor.stage;
-    var sprite = this.editor.selectedSprite;
+    var exec = this.editor.exec;
     switch (all) {
       case 'variables':
         return collection('variables', getter('readVariable'));
@@ -707,11 +702,239 @@
 
   /***************************************************************************/
 
+
+  function Dialog(title, content) {
+    this.el = cl('dialog Visual-no-select', [
+      this.elTitle = cl('dialog-title'),
+      this.elContent = content || cl('dialog-content')
+    ]);
+    if (content) content.classList.add('dialog-content');
+
+    this.el.addEventListener('keydown', this.keyDown.bind(this));
+    this.el.addEventListener('mousedown', this.mouseDown.bind(this));
+    this.mouseMove = this.mouseMove.bind(this);
+    this.mouseUp = this.mouseUp.bind(this);
+
+    this.title = title;
+    this.x = 0;
+    this.y = 0;
+  }
+
+  def(Dialog.prototype, 'title', {
+    get: function() {return this._title},
+    set: function(value) {this._title = this.elTitle.textContent = value}
+  });
+
+  Dialog.prototype.padding = 4;
+
+  Dialog.prototype.moveTo = function(x, y) {
+    var p = this.padding; // NS
+    vis.util.moveTo.call(this, Math.max(p, Math.min(innerWidth - this.width - p, x)), Math.max(p, Math.min(innerHeight - this.height - p, y)));
+  };
+
+  Dialog.prototype.show = function(editor) {
+    this.editor = editor;
+
+    document.body.appendChild(this.el);
+    var ebb = editor.el.getBoundingClientRect();
+    var tbb = this.el.getBoundingClientRect();
+
+    this.width = tbb.width | 0;
+    this.height = tbb.height | 0;
+    this.moveTo(Math.floor((Math.max(0, ebb.left) + Math.min(innerWidth, ebb.right) - tbb.width) / 2), Math.floor((Math.max(0, ebb.top) + Math.min(innerHeight, ebb.bottom) - tbb.height) / 2));
+
+    this.focusFirst(this.elContent);
+
+    return this;
+  };
+
+  Dialog.prototype.focusFirst = function(el) {
+    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'BUTTON') {
+      el.focus();
+      return true;
+    }
+    var c = el.childNodes;
+    for (var i = 0, l = c.length; i < l; i++) {
+      if (this.focusFirst(c[i])) return true;
+    }
+    return false;
+  };
+
+  Dialog.prototype.hide = function() {
+    if (this.editor) {
+      document.body.removeChild(this.el);
+      this.editor = null;
+    }
+    return this;
+  };
+
+  Dialog.prototype.commit = function() {
+    if (this.oncommit) this.oncommit();
+    this.hide();
+    return this;
+  };
+
+  Dialog.prototype.cancel = function() {
+    if (this.oncancel) this.oncancel();
+    this.hide();
+    return this;
+  };
+
+  Dialog.label = function(text) {
+    return cl('dialog-label', [text]);
+  };
+
+  Dialog.Field = function(label, value) {
+    this.value = '';
+    this.el = cl('label', 'dialog-label', [
+      label,
+      this.field = cl('input', 'dialog-field', {
+        value: value == null ? '' : value
+      })
+    ]);
+    this.field.addEventListener('input', this.change.bind(this));
+  };
+
+  Dialog.Field.prototype.change = function() {
+    this.value = this.field.value;
+  };
+
+  Dialog.Radio = function() {
+    this.el = cl('dialog-label');
+    this.radios = [];
+    this.labels = [];
+    this.values = [];
+    var a = this.args = slice.call(arguments);
+    for (var i = 0, l = a.length; i < l; i++) {
+      var s = a[i];
+      var radio = cl('button', 'dialog-radio', {dataset: {index: i}});
+      var label = cl('label', 'dialog-radio-label enabled', [radio, s[0]]);
+      radio.addEventListener('click', this.click.bind(this, i));
+      this.el.appendChild(label);
+      this.labels.push(label);
+      this.radios.push(radio);
+      this.values.push(s[1]);
+      if (this.value == null) {
+        radio.classList.add('selected');
+        this.radio = radio;
+        this.value = s[1];
+      }
+    }
+  };
+
+  Dialog.Radio.prototype.setEnabled = function(i, enabled) {
+    var radio = this.radios[i];
+    if (radio) {
+      radio.dataset.enabled = !!enabled;
+      var label = this.labels[i];
+      label.classList.toggle('enabled', !!enabled);
+    }
+  };
+
+  Dialog.Radio.prototype.click = function(i) {
+    var radio = this.radios[i];
+    if (radio.dataset.enabled !== 'false') {
+      if (this.radio) this.radio.classList.remove('selected');
+      this.radio = radio;
+      this.value = this.values[i];
+      radio.classList.add('selected');
+      if (this.onchange) this.onchange();
+    }
+  };
+
+  Dialog.Radio.prototype.onchange = null;
+
+  Dialog.CheckBox = function(label) {
+    this._enabled = true;
+    this.value = false;
+    this.el = cl('label', 'dialog-label dialog-check-box-label enabled', [
+      this.button = cl('button', 'check-box'),
+      label
+    ]);
+    this.button.addEventListener('click', this.click.bind(this));
+  };
+
+  Dialog.CheckBox.prototype.click = function(e) {
+    e.preventDefault();
+    if (!this._enabled) return;
+    this.value = !this.value;
+    this.button.classList.toggle('checked', this.value);
+    if (this.onchange) this.onchange();
+  };
+
+  def(Dialog.CheckBox.prototype, 'enabled', {
+    get: function() {return this._enabled},
+    set: function(value) {
+      this._enabled = value;
+      this.el.classList.toggle('enabled', !!value);
+    }
+  });
+
+  Dialog.CheckBox.prototype.onchange = null;
+
+  Dialog.line = function() {
+    return cl('dialog-separator');
+  };
+
+  Dialog.content = function() {
+    return el('div', slice.call(arguments));
+  };
+
+  Dialog.buttons = function() {
+    var div = cl('dialog-buttons');
+    var a = slice.call(arguments);
+    for (var i = 0, l = a.length; i < l; i++) {
+      var b = a[i];
+      if (typeof b !== 'object') b = [b, b];
+      var button = cl('button', 'ui-button', [b[0]]);
+      div.appendChild(button);
+      if (b[1]) button.addEventListener('click', b[1]);
+    }
+    return div;
+  };
+
+  Dialog.prototype.keyDown = function(e) {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      this.commit();
+    }
+    if (e.keyCode === 27) {
+      e.preventDefault();
+      this.cancel();
+    }
+  };
+
+  Dialog.prototype.mouseDown = function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'LABEL' || e.target.tagName === 'A' || e.button !== 0) return;
+    this.dragX = this.x - e.clientX;
+    this.dragY = this.y - e.clientY;
+    document.addEventListener('mousemove', this.mouseMove);
+    document.addEventListener('mouseup', this.mouseUp);
+    this.goToFront();
+  };
+
+  Dialog.prototype.goToFront = function() {
+    document.body.appendChild(this.el);
+  };
+
+  Dialog.prototype.mouseMove = function(e) {
+    this.moveTo(this.dragX + e.clientX, this.dragY + e.clientY);
+  };
+
+  Dialog.prototype.mouseUp = function(e) {
+    this.moveTo(this.dragX + e.clientX, this.dragY + e.clientY);
+    document.removeEventListener('mousemove', this.mouseMove);
+    document.removeEventListener('mouseup', this.mouseUp);
+  };
+
+  /***************************************************************************/
+
   class Interpreter {
     constructor(editor) {
       this.editor = editor;
 
       this.pots = []
+      this.variables = {}
     }
 
     async init() {
@@ -727,6 +950,7 @@
       this.user_id = data.user_id
       this.account_id = data.account_id
       this.pots = data.pots
+      //this.variables = data.variables // TODO
       return data
     }
 
@@ -736,7 +960,7 @@
 
       script.addRunningEffect();
 
-      let isError 
+      let isError
       let data
       try {
         data = await fetch("/execute", {
@@ -844,6 +1068,11 @@
     }
 
     hasWatcher(n) { return false; }
+
+    removeVariable(name) {
+      delete this.exec.variables[name];
+      this.scriptsPanel.refreshPalette();
+    }
   }
 
   Editor.prototype.bubbleRange = 25;
@@ -940,6 +1169,33 @@
       this.bubble = null;
     }
   };
+
+  Editor.prototype.newVariable = function() {
+    this.newDialog(false);
+  };
+
+  Editor.prototype.newDialog = function(list) {
+    var name = new Dialog.Field(_(list ? 'List name:' : 'Variable name:'));
+    var d = new Dialog(_(list ? 'New List' : 'New Variable'), Dialog.content(
+      name.el,
+      Dialog.buttons(
+        [_('OK'), function() {d.commit()}],
+        [_('Cancel'), function() {d.hide()}])));
+
+    d.oncommit = function() {
+      if (list) {
+      } else {
+        this.addVariable(name.value);
+      }
+    }.bind(this);
+    d.show(this);
+  };
+
+  Editor.prototype.addVariable = function(name) {
+    this.exec.variables[name] = '0';
+    console.log(this.exec.variables);
+    this.scriptsPanel.refreshPalette();
+  }
 
 
   const editor = window.editor = new Editor()
