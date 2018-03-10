@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html"
 	"log"
 	"math/rand"
 	"net/http"
@@ -13,9 +12,20 @@ import (
 
 	"github.com/monzo/typhon"
 
-	"github.com/tjvr/coral-script/interpreter"
 	"github.com/tjvr/go-monzo"
 )
+
+type InterpreterExecuteRequest struct {
+	AccessToken    string          `json:"access_token"`
+	UserID         string          `json:"user_id"`
+	Script         [][]interface{} `json:"script"`
+	IdempotencyKey string          `json:"idempotency_key"`
+}
+
+type InterpreterExecuteResponse struct {
+	Result interface{} `json:"result"`
+	Error  string      `json:"script_error"`
+}
 
 var auth *monzo.Authenticator
 
@@ -33,6 +43,8 @@ func (h HandlerError) Error() string {
 }
 
 func main() {
+	interpreter := os.Getenv("INTERPRETER")
+
 	fs := http.FileServer(http.Dir("public"))
 	http.Handle("/", fs)
 
@@ -112,9 +124,9 @@ func main() {
 
 		decoder := json.NewDecoder(req.Body)
 		body := &ExecuteRequest{}
-		err := decoder.Decode(body)
-		if err != nil {
-			panic(err)
+		if err := decoder.Decode(body); err != nil {
+			renderError(w, HandlerError{"invalid body: " + err.Error(), 400})
+			return
 		}
 		defer req.Body.Close()
 
@@ -122,14 +134,19 @@ func main() {
 			fmt.Printf("%#v\n", s)
 		}
 
-		rawRsp := typhon.NewRequest(context.Background(), "POST", "http://localhost:1234/execute", &interpreter.ExecuteRequest{
-			AccessToken:    session.Client.AccessToken,
-			UserID:         session.Client.UserID,
+		cl := session.Client
+		if cl == nil {
+			renderError(w, HandlerError{"not authenticated", 401})
+			return
+		}
+		rawRsp := typhon.NewRequest(context.Background(), "POST", interpreter, &InterpreterExecuteRequest{
+			AccessToken:    cl.AccessToken,
+			UserID:         cl.UserID,
 			Script:         body.Script,
 			IdempotencyKey: randomString(20),
 		}).Send().Response()
 
-		rsp := &interpreter.ExecuteResponse{}
+		rsp := &InterpreterExecuteResponse{}
 		if err := rawRsp.Decode(rsp); err != nil {
 			fmt.Println(err)
 			renderError(w, HandlerError{"execute error", 500})

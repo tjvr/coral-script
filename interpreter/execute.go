@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+
 	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
 
@@ -8,7 +10,6 @@ import (
 )
 
 func handleExecute(req typhon.Request) typhon.Response {
-
 	body := &ExecuteRequest{}
 	if err := req.Decode(body); err != nil {
 		return typhon.Response{Error: err}
@@ -41,6 +42,7 @@ func handleExecute(req typhon.Request) typhon.Response {
 		})
 	}
 
+	fmt.Printf("%v\n", result)
 	return req.Response(&ExecuteResponse{
 		Result: result,
 	})

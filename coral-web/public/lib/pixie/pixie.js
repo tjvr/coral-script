@@ -981,8 +981,8 @@
 
       console.log(data)
       if (data === undefined) return
+      if (data.result == null && !data.script_error) return
       const message = data.result == null ? data.script_error : data.result
-      if (message == null) return
       var pos = script.blocks[0].worldPosition;
       this.editor.showBubble(message, pos.x + script.width, pos.y);
     }
