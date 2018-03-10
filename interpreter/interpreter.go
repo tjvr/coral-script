@@ -26,6 +26,48 @@ type Thread struct {
 	Stopped        bool
 }
 
+func (t *Thread) GetTransaction() (*monzo.Transaction, error) {
+	if t.Transaction != nil {
+		return t.Transaction, nil
+	}
+
+	accountID, err := t.GetAccountID()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get last transaction
+	transactions, err := t.Client.Transactions(accountID, false)
+	if err != nil {
+		return nil, err
+	}
+	// nb. caching will fail if you have no transactions. This is okay
+	lastTx := lastNonPotTransaction(transactions)
+	if lastTx == nil {
+		return nil, fmt.Errorf("no transactions yet")
+	}
+
+	// Fetch merchant data
+	tx, err := t.Client.Transaction(lastTx.ID)
+	if err != nil {
+		return nil, err
+	}
+	t.Transaction = tx
+	return tx, nil
+}
+
+func lastNonPotTransaction(transactions []*monzo.Transaction) *monzo.Transaction {
+	for i := len(transactions) - 1; i >= 0; i-- {
+		tx := transactions[i]
+		fmt.Printf("%#v\n", tx)
+		if tx.Scheme == "uk_retail_pot" {
+			continue
+		}
+		return tx
+	}
+	return nil
+}
+
 func (t *Thread) GetAccountID() (string, error) {
 	if t.AccountID != "" {
 		return t.AccountID, nil

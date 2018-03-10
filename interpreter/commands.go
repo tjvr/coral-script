@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+
 	"github.com/tjvr/go-monzo"
 )
 
@@ -428,10 +430,15 @@ func strLength(t *Thread, args []interface{}) (Result, error) {
 
 func txGetter(getter func(*monzo.Transaction) Result) Command {
 	return func(t *Thread, args []interface{}) (Result, error) {
-		if t.Transaction == nil {
+		tx, err := t.GetTransaction()
+		if err != nil {
+			return nil, err
+		}
+		if tx == nil {
 			return "", nil
 		}
-		return getter(t.Transaction), nil
+		fmt.Printf("%#v\n", tx)
+		return getter(tx), nil
 	}
 }
 
@@ -443,7 +450,14 @@ func checkCategory(t *Thread, args []interface{}) (Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	return category == t.Transaction.Category, nil
+	tx, err := t.GetTransaction()
+	if err != nil {
+		return nil, err
+	}
+	if tx == nil {
+		return "", nil
+	}
+	return category == tx.Category, nil
 }
 
 func checkScheme(t *Thread, args []interface{}) (Result, error) {
@@ -454,5 +468,12 @@ func checkScheme(t *Thread, args []interface{}) (Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	return scheme == t.Transaction.Scheme, nil
+	tx, err := t.GetTransaction()
+	if err != nil {
+		return nil, err
+	}
+	if tx == nil {
+		return "", nil
+	}
+	return scheme == tx.Scheme, nil
 }
