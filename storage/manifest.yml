@@ -1,0 +1,43 @@
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: coral-storage
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: coral-storage
+    spec:
+      containers:
+      - name: coral-storage
+        image: docker.tjvr.org/coral-storage
+        env:
+        - name: DB_PATH
+          value: /data/coral.db
+        ports:
+        - name: http
+          containerPort: 8000
+        volumeMounts:
+        - name: persistent-data
+          mountPath: /data
+      volumes:
+      - name: persistent-data
+        hostPath:
+          path: /srv/coral
+      imagePullSecrets:
+      - name: regsecret
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: coral-storage
+spec:
+  ports:
+  - protocol: TCP
+    port: 8000
+  selector:
+    app: coral-storage
+
