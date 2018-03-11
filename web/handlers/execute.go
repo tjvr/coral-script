@@ -1,12 +1,13 @@
-package interpreter
+package handlers
 
 import (
 	"fmt"
 
 	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
-
 	"github.com/tjvr/go-monzo"
+
+	"../interpreter"
 )
 
 func handleExecute(req typhon.Request) typhon.Response {
@@ -16,26 +17,28 @@ func handleExecute(req typhon.Request) typhon.Response {
 	}
 
 	switch {
-	case body.AccessToken == "":
-		return typhon.Response{Error: terrors.BadRequest("access_token", "Missing", nil)}
-	case body.UserID == "":
-		return typhon.Response{Error: terrors.BadRequest("user_id", "Missing", nil)}
 	case body.Script == nil:
 		return typhon.Response{Error: terrors.BadRequest("script", "Missing", nil)}
-	case body.IdempotencyKey == "":
-		return typhon.Response{Error: terrors.BadRequest("idempotency_key", "Missing", nil)}
 	}
 
-	t := &Thread{
+	session, err := getSession(req)
+	if err != nil {
+		return typhon.Response{Error: err}
+	}
+	if session.User == nil {
+		return typhon.Response{Error: terrors.Forbidden("no_user", "Not authenticated", nil)}
+	}
+
+	t := &interpreter.Thread{
 		IdempotencyKey: body.IdempotencyKey,
 		Client: &monzo.Client{
 			BaseURL:     APIBaseURL,
-			AccessToken: body.AccessToken,
-			UserID:      body.UserID,
+			AccessToken: session.User.AccessToken,
+			UserID:      session.User.UserID,
 		},
 	}
 
-	result, err := executeScript(t, body.Script)
+	result, err := interpreter.Execute(t, body.Script)
 	if err != nil {
 		return req.Response(&ExecuteResponse{
 			Error: err.Error(),
@@ -43,7 +46,7 @@ func handleExecute(req typhon.Request) typhon.Response {
 	}
 
 	fmt.Printf("%v\n", result)
-	return req.Response(&ExecuteResponse{
+	return session.SetCookie(req.Response(&ExecuteResponse{
 		Result: result,
-	})
+	}))
 }
