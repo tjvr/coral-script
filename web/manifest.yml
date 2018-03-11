@@ -16,6 +16,10 @@ spec:
           - name: web
             containerPort: 8080
         env:
+          - name: PORT
+            value: "8080"
+          - name: CORAL_STORAGE_HOST
+            value: http://coral-storage:8000
           - name: INTERPRETER
             value: "http://coral-script:8000/execute"
           - name: CLIENT_ID

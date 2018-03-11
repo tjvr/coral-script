@@ -1,7 +1,7 @@
 FROM golang as compiler
 RUN go get -tags netgo -installsuffix netgo "github.com/tjvr/go-monzo" "github.com/monzo/typhon" #1
 WORKDIR /work
-COPY main.go /work
+COPY . /work
 RUN go build -tags netgo -installsuffix netgo -o program
 
 FROM alpine as certs
