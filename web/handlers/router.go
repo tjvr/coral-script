@@ -22,6 +22,7 @@ func Service() typhon.Service {
 	router := typhon.NewRouter()
 
 	router.Register("GET", "/login", handleLogin)
+	router.Register("GET", "/logout", handleLogout)
 	router.Register("GET", "/callback", handleCallback)
 
 	router.Register("GET", "/config", handleConfig)

@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
 	"github.com/tjvr/go-monzo"
 )
@@ -58,4 +59,17 @@ func (session *Session) SetCookie(rsp typhon.Response) typhon.Response {
 		Value: session.Cookie,
 	})
 	return rsp
+}
+
+func (session *Session) Client() (*monzo.Client, error) {
+	if session.User == nil {
+		return nil, terrors.Forbidden("user", "Not logged in", nil)
+	}
+
+	return &monzo.Client{
+		BaseURL:      APIBaseURL,
+		UserID:       session.User.UserID,
+		AccessToken:  session.User.AccessToken,
+		RefreshToken: session.User.RefreshToken,
+	}, nil
 }

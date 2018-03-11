@@ -1,48 +1,47 @@
 package handlers
 
 import (
+	"strings"
+
+	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
 	monzo "github.com/tjvr/go-monzo"
 )
 
 func handleConfig(req typhon.Request) typhon.Response {
-	/*
-		session := auth.GetSession(w, req)
-		if !session.IsAuthenticated() {
-			renderError(w, HandlerError{"not authenticated", 401})
-			return
-		}
+	session, err := getSession(req)
+	if err != nil {
+		return typhon.Response{Error: err}
+	}
 
-		cl := auth.EnsureAuthenticated(w, req)
-		if cl == nil {
-			return
-		}
+	cl, err := session.Client()
+	if err != nil {
+		return typhon.Response{Error: err}
+	}
 
-		accounts, err := cl.Accounts("uk_retail")
-		if err != nil {
-			renderError(w, err)
-			return
+	accounts, err := cl.Accounts("uk_retail")
+	if err != nil {
+		// TODO go-monzo should use terrors / Typhon.
+		merr, ok := err.(*monzo.APIError)
+		if ok && strings.HasPrefix(merr.Code, "unauthorized.bad_access_token") {
+			return typhon.Response{Error: terrors.Forbidden("user", "Access token expired", nil)}
 		}
-		if len(accounts) == 0 {
-			renderError(w, HandlerError{"no current account", 412})
-			return
-		}
-		retailAcc := accounts[0]
+		return typhon.Response{Error: err}
+	}
+	if len(accounts) == 0 {
+		return typhon.Response{Error: terrors.PreconditionFailed("no_retail_account", "No current account", nil)}
+	}
+	retailAcc := accounts[0]
 
-		pots, err := cl.Pots()
-		if err != nil {
-			renderError(w, err)
-			return
-		}
+	pots, err := cl.Pots()
+	if err != nil {
+		return typhon.Response{Error: err}
+	}
 
-		renderJSON(w, map[string]interface{}{
-			"user_id":             cl.UserID,
-			"account_id":          retailAcc.ID,
-			"account_description": retailAcc.Description,
-			"pots":                pots,
-		})
-	*/
 	return req.Response(&ConfigResponse{
-		Pots: []*monzo.Pot{},
+		UserID:             cl.UserID,
+		AccountID:          retailAcc.ID,
+		AccountDescription: retailAcc.Description,
+		Pots:               pots,
 	})
 }

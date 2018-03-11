@@ -932,7 +932,7 @@
       const rsp = await fetch("/config", {
         credentials: "include",
       })
-      if (rsp.status === 401) {
+      if (rsp.status === 403) {
         return
       }
       const config = await rsp.json()

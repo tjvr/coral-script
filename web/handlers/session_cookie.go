@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -33,13 +32,6 @@ func getSession(req typhon.Request) (*Session, error) {
 		return nil, err
 	}
 	return session, nil
-}
-
-func saveSession(ctx context.Context, cookie string, body *SaveSessionRequest) error {
-	uri := storageHost + "/session/" + cookie
-	rsp := typhon.NewRequest(ctx, "POST", uri, body).Send().Response()
-	session := &Session{}
-	return rsp.Decode(session)
 }
 
 func getSessionCookie(req typhon.Request) string {
