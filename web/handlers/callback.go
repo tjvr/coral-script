@@ -25,6 +25,16 @@ func handleCallback(req typhon.Request) typhon.Response {
 		return typhon.Response{Error: err}
 	}
 
+	switch {
+	case cl.UserID == "":
+		return typhon.Response{Error: terrors.Unauthorized("user_id", "Login failed", nil)}
+	case cl.AccessToken == "":
+		return typhon.Response{Error: terrors.Unauthorized("access_token", "Login failed", nil)}
+	case cl.RefreshToken == "":
+		// nb. only confidential clients receive refresh tokens
+		return typhon.Response{Error: terrors.Unauthorized("refresh_token", "Login failed", nil)}
+	}
+
 	// Store session
 	if err := saveSession(req, session.Cookie, &SaveSessionRequest{
 		UserID:       cl.UserID,
