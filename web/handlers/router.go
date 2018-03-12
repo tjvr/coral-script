@@ -26,6 +26,7 @@ func Service() typhon.Service {
 	router.Register("GET", "/callback", handleCallback)
 
 	router.Register("GET", "/config", handleConfig)
+	router.Register("POST", "/save", handleSave)
 	router.Register("POST", "/execute", handleExecute)
 	router.Register("POST", "/webhook", handleWebhook)
 

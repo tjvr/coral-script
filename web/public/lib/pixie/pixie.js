@@ -945,6 +945,17 @@
       return config
     }
 
+    async save(body) {
+      const rsp = await fetch("/save", {
+        credentials: "include",
+        method: 'POST',
+        body: body,
+      })
+      if (rsp.status !== 200) {
+        throw new Error("HTTP " + rsp.status)
+      }
+    }
+
     async runScript(script) {
       if (!this.user_id || !this.account_id) return
       console.log(JSON.stringify(script.blocks))
@@ -980,7 +991,6 @@
         }, 1000)
       }
 
-      console.log(data)
       if (data === undefined) return
       if (data.result == null && !data.script_error) return
       const message = data.result == null ? data.script_error : data.result
@@ -1036,8 +1046,8 @@
       this.statusEl.textContent = "Account: " + config.account_description
 
       if (config) {
-        //this.import(config.scripts)
-        //return
+        this.import(config)
+        return
       }
       this.load(config)
     }
@@ -1066,7 +1076,10 @@
       }
     }
 
-    save() {
+    async save() {
+      if (this.exec.user_id) {
+        await this.exec.save(JSON.stringify(this))
+      }
       localStorage.coralScript = JSON.stringify(this)
     }
 
@@ -1196,7 +1209,6 @@
 
   Editor.prototype.addVariable = function(name) {
     this.exec.variables[name] = '0';
-    console.log(this.exec.variables);
     this.scriptsPanel.refreshPalette();
   }
 

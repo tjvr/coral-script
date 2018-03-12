@@ -35,6 +35,14 @@ type ConfigResponse struct {
 	Scripts            [][]interface{}        `json:"scripts"`
 }
 
+type SaveRequest struct {
+	Scripts [][]interface{} `json:"scripts"`
+}
+
+type SaveScriptsRequest struct {
+	Scripts [][]interface{} `json:"scripts"`
+}
+
 type Session struct {
 	Cookie string `json:"cookie"`
 	State  string `json:"state_string"`
