@@ -496,6 +496,11 @@ func randomInt(t *Thread, args []interface{}) (Result, error) {
 	if err != nil {
 		return nil, err
 	}
+	if a > b {
+		tmp := a
+		a = b
+		b = tmp
+	}
 	return a + rand.Int63n(b-a+1), nil
 }
 
