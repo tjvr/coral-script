@@ -24,6 +24,7 @@ type Thread struct {
 	AccountID      string
 	Pots           []*monzo.Pot
 	Stopped        bool
+	Variables      map[string]interface{}
 }
 
 func (t *Thread) GetTransaction() (*monzo.Transaction, error) {

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
 	"github.com/tjvr/go-monzo"
@@ -27,23 +29,50 @@ func handleExecute(req typhon.Request) typhon.Response {
 		return typhon.Response{Error: terrors.Forbidden("no_user", "Not authenticated", nil)}
 	}
 
+	rsp, err := execute(req, body.IdempotencyKey, session.User, body.Script)
+	if err != nil {
+		return typhon.Response{Error: err}
+	}
+
+	return session.SetCookie(req.Response(rsp))
+}
+
+func execute(ctx context.Context, idempotencyKey string, user *User, script [][]interface{}) (*ExecuteResponse, error) {
 	t := &interpreter.Thread{
-		IdempotencyKey: body.IdempotencyKey,
+		IdempotencyKey: idempotencyKey,
 		Client: &monzo.Client{
 			BaseURL:     APIBaseURL,
-			AccessToken: session.User.AccessToken,
-			UserID:      session.User.UserID,
+			AccessToken: user.AccessToken,
+			UserID:      user.UserID,
 		},
+		Variables: user.Variables,
 	}
 
-	result, err := interpreter.Execute(t, body.Script)
-	if err != nil {
-		return req.Response(&ExecuteResponse{
-			Error: err.Error(),
-		})
+	result, executeErr := interpreter.Execute(t, script)
+
+	if err := saveVariables(ctx, user.UserID, &SaveVariablesRequest{
+		Variables: t.Variables,
+	}); err != nil {
+		return nil, err
 	}
 
-	return session.SetCookie(req.Response(&ExecuteResponse{
+	if executeErr != nil {
+		return &ExecuteResponse{
+			Error: executeErr.Error(),
+		}, nil
+	}
+	return &ExecuteResponse{
 		Result: result,
-	}))
+	}, nil
+}
+
+type SaveVariablesRequest struct {
+	Variables map[string]interface{} `json:"variables"`
+}
+
+func saveVariables(ctx context.Context, userID string, body *SaveVariablesRequest) error {
+	uri := storageHost + "/user/" + userID + "/variables"
+	rsp := typhon.NewRequest(ctx, "PUT", uri, body).Send().Response()
+	session := &Session{}
+	return rsp.Decode(session)
 }
