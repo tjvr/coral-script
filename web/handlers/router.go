@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/monzo/typhon"
-	monzo "github.com/tjvr/go-monzo"
+	"github.com/tjvr/go-monzo"
 )
 
 var APIBaseURL = "https://api.monzo.com"
@@ -27,6 +27,7 @@ func Service() typhon.Service {
 
 	router.Register("GET", "/config", handleConfig)
 	router.Register("POST", "/execute", handleExecute)
+	router.Register("POST", "/webhook", handleWebhook)
 
 	// Abuse Typhon to serve static files
 	staticPaths := []string{
