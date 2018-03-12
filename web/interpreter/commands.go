@@ -13,6 +13,10 @@ var table = map[string]Command{}
 
 func init() {
 	table = map[string]Command{
+		"readVariable":  readVariable,
+		"setVar:to:":    setVariable,
+		"changeVar:by:": changeVariableBy,
+
 		"whenTxCredit": nop,
 		"whenTxDebit":  nop,
 
@@ -94,6 +98,49 @@ func doIf(t *Thread, args []interface{}) (Result, error) {
 	}
 	_, err = executeScript(t, blocks)
 	return nil, err
+}
+
+/* Variables */
+
+func readVariable(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 1 {
+		return "", BadScript{"missing arguments"}
+	}
+	name, err := stringArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	return t.Variables[name], nil
+}
+
+func setVariable(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 2 {
+		return "", BadScript{"missing arguments"}
+	}
+	name, err := stringArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	val, err := eval(t, args[1])
+	if err != nil {
+		return nil, err
+	}
+	t.Variables[name] = val
+	return nil, nil
+}
+
+func changeVariableBy(t *Thread, args []interface{}) (Result, error) {
+	if len(args) != 2 {
+		return "", BadScript{"missing arguments"}
+	}
+	name, err := stringArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	delta, err := floatArg(t, args[1])
+	value := toFloat(t.Variables[name])
+	t.Variables[name] = value + delta
+	return nil, nil
 }
 
 /* Monzo */

@@ -50,21 +50,25 @@ func floatArg(t *Thread, val interface{}) (float64, error) {
 		return 0, err
 	}
 
+	return toFloat(val), nil
+}
+
+func toFloat(val interface{}) float64 {
 	switch val.(type) {
 	case float64:
-		return val.(float64), nil
+		return val.(float64)
 	case int64:
-		return float64(val.(int64)), nil
+		return float64(val.(int64))
 	case string:
 		str := stripCurrency(val.(string))
 		n, err := strconv.ParseFloat(str, 64)
 		if err != nil {
-			return 0, nil
+			return 0
 		}
-		return n, nil
+		return n
 	default:
 		fmt.Printf("%v\n", reflect.TypeOf(val))
-		return 0, nil
+		return 0
 	}
 }
 
