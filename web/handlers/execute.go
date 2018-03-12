@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/monzo/terrors"
 	"github.com/monzo/typhon"
 	"github.com/tjvr/go-monzo"
@@ -45,7 +43,6 @@ func handleExecute(req typhon.Request) typhon.Response {
 		})
 	}
 
-	fmt.Printf("%v\n", result)
 	return session.SetCookie(req.Response(&ExecuteResponse{
 		Result: result,
 	}))
