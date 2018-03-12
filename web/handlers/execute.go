@@ -66,10 +66,6 @@ func execute(ctx context.Context, idempotencyKey string, user *User, script [][]
 	}, nil
 }
 
-type SaveVariablesRequest struct {
-	Variables map[string]interface{} `json:"variables"`
-}
-
 func saveVariables(ctx context.Context, userID string, body *SaveVariablesRequest) error {
 	uri := storageHost + "/user/" + userID + "/variables"
 	rsp := typhon.NewRequest(ctx, "PUT", uri, body).Send().Response()

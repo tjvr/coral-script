@@ -43,5 +43,7 @@ func handleConfig(req typhon.Request) typhon.Response {
 		AccountID:          retailAcc.ID,
 		AccountDescription: retailAcc.Description,
 		Pots:               pots,
+		Variables:          session.User.Variables,
+		Scripts:            session.User.Scripts,
 	})
 }

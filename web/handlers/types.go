@@ -27,10 +27,12 @@ type WebHookRequest struct {
 }
 
 type ConfigResponse struct {
-	UserID             string       `json:"user_id"`
-	AccountID          string       `json:"account_id"`
-	AccountDescription string       `json:"account_description"`
-	Pots               []*monzo.Pot `json:"pots"`
+	UserID             string                 `json:"user_id"`
+	AccountID          string                 `json:"account_id"`
+	AccountDescription string                 `json:"account_description"`
+	Pots               []*monzo.Pot           `json:"pots"`
+	Variables          map[string]interface{} `json:"variables"`
+	Scripts            [][]interface{}        `json:"scripts"`
 }
 
 type Session struct {
@@ -51,6 +53,10 @@ type SaveSessionRequest struct {
 	UserID       string `json:"user_id"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type SaveVariablesRequest struct {
+	Variables map[string]interface{} `json:"variables"`
 }
 
 func (session *Session) SetCookie(rsp typhon.Response) typhon.Response {

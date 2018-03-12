@@ -940,7 +940,8 @@
       this.user_id = config.user_id
       this.account_id = config.account_id
       this.pots = config.pots
-      //this.variables = config.variables // TODO
+      this.variables = config.variables
+      this.editor.scriptsPanel.refreshPalette()
       return config
     }
 
@@ -1034,11 +1035,14 @@
 
       this.statusEl.textContent = "Account: " + config.account_description
 
+      if (config) {
+        //this.import(config.scripts)
+        //return
+      }
       this.load(config)
     }
 
-    load(config) {
-      // TODO load from localStorage only if no config
+    load() {
       if (!localStorage.coralScript) return
       let json
       try {
