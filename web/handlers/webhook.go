@@ -126,9 +126,12 @@ func executeScripts(
 		}
 		log.Infof("Executing %s for %s", selector, tx.ID)
 
-		_, err := execute(ctx, idempotencyKey, user, blocks, tx)
+		result, err := execute(ctx, idempotencyKey, user, blocks, tx)
 		if err != nil {
 			return err
+		}
+		if result.Error != "" {
+			log.Errorf("Script error: %v", result.Error)
 		}
 	}
 	return nil
