@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 
+	"github.com/labstack/gommon/log"
 	"github.com/monzo/typhon"
 	monzo "github.com/tjvr/go-monzo"
 )
@@ -15,12 +16,13 @@ type WebhookRequest struct {
 }
 
 func handleWebhook(req typhon.Request) typhon.Response {
-	body := &WebhookRequest{}
+	body := &map[string]interface{}{}
 	if err := req.Decode(body); err != nil {
+		log.Errorf("Error decoding webhook: %v", err)
 		return typhon.Response{Error: err}
 	}
 
-	fmt.Printf("%#v\n", body.Transaction)
+	fmt.Printf("%#v\n", body)
 
 	return req.Response(struct{}{})
 }
