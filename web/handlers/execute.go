@@ -29,7 +29,7 @@ func handleExecute(req typhon.Request) typhon.Response {
 		return typhon.Response{Error: terrors.Forbidden("no_user", "Not authenticated", nil)}
 	}
 
-	rsp, err := execute(req, body.IdempotencyKey, session.User, body.Script)
+	rsp, err := execute(req, body.IdempotencyKey, session.User, body.Script, nil)
 	if err != nil {
 		return typhon.Response{Error: err}
 	}
@@ -37,7 +37,13 @@ func handleExecute(req typhon.Request) typhon.Response {
 	return session.SetCookie(req.Response(rsp))
 }
 
-func execute(ctx context.Context, idempotencyKey string, user *User, script [][]interface{}) (*ExecuteResponse, error) {
+func execute(
+	ctx context.Context,
+	idempotencyKey string,
+	user *User,
+	script [][]interface{},
+	tx *monzo.Transaction,
+) (*ExecuteResponse, error) {
 	t := &interpreter.Thread{
 		IdempotencyKey: idempotencyKey,
 		Client: &monzo.Client{
@@ -45,7 +51,8 @@ func execute(ctx context.Context, idempotencyKey string, user *User, script [][]
 			AccessToken: user.AccessToken,
 			UserID:      user.UserID,
 		},
-		Variables: user.Variables,
+		Variables:   user.Variables,
+		Transaction: tx,
 	}
 
 	result, executeErr := interpreter.Execute(t, script)

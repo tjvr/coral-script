@@ -49,7 +49,10 @@ def login(cookie):
 
 @app.route("/session/<cookie>", methods=['DELETE'])
 def logout(cookie):
-    Session.delete().where(Session.cookie == cookie).execute()
+    try:
+        Session.delete().where(Session.cookie == cookie).execute()
+    except Session.DoesNotExist:
+        pass
     return jsonify()
 
 @app.route("/session/<cookie>/scripts", methods=['PUT'])

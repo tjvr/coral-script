@@ -212,10 +212,14 @@ func depositIntoPot(t *Thread, args []interface{}) (Result, error) {
 	_, err = t.Client.Deposit(&monzo.DepositRequest{
 		AccountID:      accountID,
 		Amount:         int64(a * 100),
-		IdempotencyKey: t.IdempotencyKey,
+		IdempotencyKey: t.MakeIdempotencyKey(),
 		PotID:          potID,
 	})
-	return "", err
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("Deposited %.2f into %s\n", a, potID)
+	return "", nil
 }
 
 func withdrawFromPot(t *Thread, args []interface{}) (Result, error) {
@@ -247,7 +251,11 @@ func withdrawFromPot(t *Thread, args []interface{}) (Result, error) {
 		IdempotencyKey: t.IdempotencyKey,
 		PotID:          potID,
 	})
-	return "", err
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("Withdrew %.2f from %s\n", a, potID)
+	return "", nil
 }
 
 /* Operators */
@@ -515,7 +523,6 @@ func txGetter(getter func(*monzo.Transaction) Result) Command {
 		if tx == nil {
 			return "", nil
 		}
-		fmt.Printf("%#v\n", tx)
 		return getter(tx), nil
 	}
 }

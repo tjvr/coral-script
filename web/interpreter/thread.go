@@ -21,10 +21,16 @@ type Thread struct {
 	Client         *monzo.Client
 	Transaction    *monzo.Transaction
 	IdempotencyKey string
+	OpCount        int
 	AccountID      string
 	Pots           []*monzo.Pot
 	Stopped        bool
 	Variables      map[string]interface{}
+}
+
+func (t *Thread) MakeIdempotencyKey() string {
+	t.OpCount++
+	return fmt.Sprintf("%s:%d", t.IdempotencyKey, t.OpCount)
 }
 
 func (t *Thread) GetTransaction() (*monzo.Transaction, error) {

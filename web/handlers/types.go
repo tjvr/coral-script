@@ -79,11 +79,14 @@ func (session *Session) Client() (*monzo.Client, error) {
 	if session.User == nil {
 		return nil, terrors.Forbidden("user", "Not logged in", nil)
 	}
+	return session.User.Client(), nil
+}
 
+func (user *User) Client() *monzo.Client {
 	return &monzo.Client{
 		BaseURL:      APIBaseURL,
-		UserID:       session.User.UserID,
-		AccessToken:  session.User.AccessToken,
-		RefreshToken: session.User.RefreshToken,
-	}, nil
+		UserID:       user.UserID,
+		AccessToken:  user.AccessToken,
+		RefreshToken: user.RefreshToken,
+	}
 }
