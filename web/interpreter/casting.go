@@ -7,6 +7,19 @@ import (
 	"strings"
 )
 
+func BlocksFromScript(script []interface{}) [][]interface{} {
+	blocks := script[2].([]interface{})
+	return BlocksFromArray(blocks)
+}
+
+func BlocksFromArray(array []interface{}) [][]interface{} {
+	blocks := make([][]interface{}, len(array))
+	for i, block := range array {
+		blocks[i] = block.([]interface{})
+	}
+	return blocks
+}
+
 func eval(t *Thread, val interface{}) (Result, error) {
 	block, ok := val.([]interface{})
 	if !ok {

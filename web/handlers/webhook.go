@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../interpreter"
 	"github.com/labstack/gommon/log"
 	"github.com/monzo/typhon"
 	"github.com/tjvr/go-monzo"
@@ -118,7 +119,7 @@ func executeScripts(
 	for i, script := range user.Scripts {
 		idempotencyKey := fmt.Sprintf("%s:%d", tx.ID, i)
 
-		blocks := blocksFromScript(script)
+		blocks := interpreter.BlocksFromScript(script)
 		firstBlock := blocks[0]
 		selector := firstBlock[0].(string)
 		if selector != trigger {
@@ -135,15 +136,6 @@ func executeScripts(
 		}
 	}
 	return nil
-}
-
-func blocksFromScript(script []interface{}) [][]interface{} {
-	blocks := script[2].([]interface{})
-	out := make([][]interface{}, len(blocks))
-	for i, block := range blocks {
-		out[i] = block.([]interface{})
-	}
-	return out
 }
 
 func readUser(ctx context.Context, userID string) (*User, error) {

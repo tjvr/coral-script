@@ -81,10 +81,11 @@ func doIf(t *Thread, args []interface{}) (Result, error) {
 	}
 
 	if cond {
-		blocks, ok := args[1].([][]interface{}) // TODO
+		array, ok := args[1].([]interface{})
 		if !ok {
-			return "", BadScript{"not a stack"}
+			return "", err
 		}
+		blocks := BlocksFromArray(array)
 		_, err := executeScript(t, blocks)
 		return nil, err
 	}
@@ -92,10 +93,11 @@ func doIf(t *Thread, args []interface{}) (Result, error) {
 	if len(args) == 2 {
 		return nil, nil
 	}
-	blocks, ok := args[2].([][]interface{})
+	array, ok := args[2].([]interface{})
 	if !ok {
-		return "", BadScript{"else not a stack"}
+		return "", err
 	}
+	blocks := BlocksFromArray(array)
 	_, err = executeScript(t, blocks)
 	return nil, err
 }
