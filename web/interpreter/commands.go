@@ -47,19 +47,19 @@ func init() {
 		"schemeTest":   checkScheme,
 		//"txTimeAndDate": txTimeAndDate,
 
-		"+":     add,
-		"-":     sub,
-		"*":     mul,
-		"/":     div,
-		"%":     mod,
-		"round": round,
-		"abs":   abs,
-		"<":     lt,
-		">":     gt,
-		"&":     and,
-		"|":     or,
-		"not":   not,
-		//"=":       eq,
+		"+":                 add,
+		"-":                 sub,
+		"*":                 mul,
+		"/":                 div,
+		"%":                 mod,
+		"round":             round,
+		"abs":               abs,
+		"<":                 lt,
+		">":                 gt,
+		"&":                 and,
+		"|":                 or,
+		"not":               not,
+		"=":                 eq,
 		"concatenate:with:": strConcat,
 		"letter:of:":        strIndex,
 		"stringLength:":     strLength,
@@ -446,9 +446,15 @@ func eq(t *Thread, args []interface{}) (Result, error) {
 	if len(args) != 2 {
 		return "", BadScript{"missing arguments"}
 	}
-	// TODO execute arguments
-	// TODO coerce strings to intArg if necessary
-	return args[0] == args[1], nil
+	a, err := stringArg(t, args[0])
+	if err != nil {
+		return nil, err
+	}
+	b, err := stringArg(t, args[1])
+	if err != nil {
+		return nil, err
+	}
+	return a == b, nil
 }
 
 func strConcat(t *Thread, args []interface{}) (Result, error) {
